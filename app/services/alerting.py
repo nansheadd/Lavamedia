@@ -19,25 +19,30 @@ class AlertManager:
         self.logger = logging.getLogger("app.alerts")
 
     async def notify(self, message: str, *, severity: str, context: dict[str, Any] | None = None) -> None:
+        normalized_severity = severity.lower()
         payload = {
             "message": message,
-            "severity": severity,
+            "severity": normalized_severity,
             "context": context or {},
         }
-        level = (
-            logging.WARNING
-            if severity == "warning"
-            else logging.ERROR
-            if severity == "error"
-            else logging.CRITICAL
-        )
-        self.logger.log(level, message, extra={"severity": severity, **payload["context"]})
+        level_map = {
+            "debug": logging.DEBUG,
+            "info": logging.INFO,
+            "warning": logging.WARNING,
+            "error": logging.ERROR,
+            "critical": logging.CRITICAL,
+        }
+        level = level_map.get(normalized_severity, logging.ERROR)
+        extra: dict[str, Any] = {"severity": normalized_severity}
+        if payload["context"]:
+            extra["context"] = payload["context"]
+        self.logger.log(level, message, extra=extra)
         if not self.webhook_url:
             return
         if httpx is None:
             self.logger.warning(
                 "alert.httpx_missing",
-                extra={"severity": severity, "webhook_url": self.webhook_url},
+                extra={"severity": normalized_severity, "webhook_url": self.webhook_url},
             )
             return
         try:

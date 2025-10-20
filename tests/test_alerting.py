@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import types
 
 from app.services import alerting
@@ -58,3 +59,31 @@ def test_notify_uses_httpx_when_available(monkeypatch) -> None:
     assert payload["context"] == {"foo": "bar"}
     assert calls["timeout"] is None
     assert calls["init_kwargs"]["timeout"] == 5
+
+
+def test_notify_logs_with_namespaced_context(monkeypatch) -> None:
+    manager = AlertManager()
+
+    recorded: dict[str, object] = {}
+
+    def fake_log(level, message, *args, **kwargs) -> None:
+        recorded["level"] = level
+        recorded["message"] = message
+        recorded["extra"] = kwargs.get("extra")
+
+    monkeypatch.setattr(manager.logger, "log", fake_log)
+
+    asyncio.run(
+        manager.notify(
+            "Test event",
+            severity="INFO",
+            context={"message": "should not collide"},
+        )
+    )
+
+    assert recorded["level"] == logging.INFO
+    assert recorded["message"] == "Test event"
+    extra = recorded["extra"]
+    assert isinstance(extra, dict)
+    assert extra["severity"] == "info"
+    assert extra["context"] == {"message": "should not collide"}
