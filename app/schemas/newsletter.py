@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import ConfigDict, EmailStr
+
+from app.schemas.base import StrictBaseModel
 
 
-class NewsletterSubscriptionCreate(BaseModel):
+class NewsletterSubscriptionCreate(StrictBaseModel):
     email: EmailStr
     source: str | None = None
 
@@ -15,5 +17,4 @@ class NewsletterSubscriptionRead(NewsletterSubscriptionCreate):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

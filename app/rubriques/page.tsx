@@ -1,17 +1,26 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Container } from '@/components/layout/container';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { categories, articles } from '@/lib/mock-data';
+import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/seo/json-ld';
+import { categoryJsonLd } from '@/lib/structured-data';
 
-export const metadata = {
+export const revalidate = 3600;
+
+export const metadata: Metadata = buildMetadata({
   title: 'Rubriques',
-  description: 'Naviguez dans nos univers éditoriaux : planète, société, culture et innovation.'
-};
+  description: 'Naviguez dans nos univers éditoriaux : planète, société, culture et innovation.',
+  path: '/rubriques',
+  type: 'website'
+});
 
 export default function RubriquesPage() {
   return (
     <Container className="py-16">
+      <JsonLd data={categories.map(categoryJsonLd)} />
       <SectionHeading
         eyebrow="Rubriques"
         title="Nos univers éditoriaux"

@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, Field
 
 from app.models.content import ArticleWorkflowState
+from app.schemas.base import ORMBaseModel, StrictBaseModel
 
 
-class SectionBase(BaseModel):
+class SectionBase(StrictBaseModel):
     name: str
     description: str | None = None
 
@@ -16,14 +17,13 @@ class SectionCreate(SectionBase):
     pass
 
 
-class SectionRead(SectionBase):
+class SectionRead(SectionBase, ORMBaseModel):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class TagBase(BaseModel):
+class TagBase(StrictBaseModel):
     name: str
 
 
@@ -31,28 +31,27 @@ class TagCreate(TagBase):
     pass
 
 
-class TagRead(TagBase):
+class TagRead(TagBase, ORMBaseModel):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class ArticleBase(BaseModel):
+class ArticleBase(StrictBaseModel):
     title: str
     slug: str
     content: str
     excerpt: str | None = None
     section_id: int | None = None
     hero_media_id: int | None = None
-    tag_ids: list[int] = []
+    tag_ids: list[int] = Field(default_factory=list)
 
 
 class ArticleCreate(ArticleBase):
     status_id: int | None = None
 
 
-class ArticleUpdate(BaseModel):
+class ArticleUpdate(StrictBaseModel):
     title: str | None = None
     slug: str | None = None
     content: str | None = None
@@ -64,7 +63,7 @@ class ArticleUpdate(BaseModel):
     tag_ids: list[int] | None = None
 
 
-class ArticleRead(ArticleBase):
+class ArticleRead(ArticleBase, ORMBaseModel):
     id: int
     workflow_state: ArticleWorkflowState
     status_id: int | None
@@ -72,11 +71,10 @@ class ArticleRead(ArticleBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class MediaAssetBase(BaseModel):
+class MediaAssetBase(StrictBaseModel):
     url: str
     media_type: str
     description: str | None = None
@@ -87,15 +85,14 @@ class MediaAssetCreate(MediaAssetBase):
     pass
 
 
-class MediaAssetRead(MediaAssetBase):
+class MediaAssetRead(MediaAssetBase, ORMBaseModel):
     id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class ArticleStatusBase(BaseModel):
+class ArticleStatusBase(StrictBaseModel):
     name: str
     workflow_state: ArticleWorkflowState
 
@@ -104,8 +101,7 @@ class ArticleStatusCreate(ArticleStatusBase):
     pass
 
 
-class ArticleStatusRead(ArticleStatusBase):
+class ArticleStatusRead(ArticleStatusBase, ORMBaseModel):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

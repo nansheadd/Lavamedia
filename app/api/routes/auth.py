@@ -26,6 +26,7 @@ from app.schemas.auth import (
     Token,
 )
 from app.schemas.user import UserCreate, UserRead
+from app.services.audit import log_event
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -48,6 +49,12 @@ async def signup(user_in: UserCreate, session: AsyncSession = Depends(get_sessio
     await session.refresh(user)
 
     mfa_uri = generate_mfa_uri(mfa_secret, user.email) if mfa_secret else None
+    log_event(
+        "user.signup",
+        actor=str(user.id),
+        target=str(user.id),
+        extra={"email": user.email, "mfa_enabled": bool(mfa_secret)},
+    )
     return SignupResponse(user_id=user.id, mfa_uri=mfa_uri)
 
 
@@ -55,13 +62,33 @@ async def signup(user_in: UserCreate, session: AsyncSession = Depends(get_sessio
 async def login(request: LoginRequest, session: AsyncSession = Depends(get_session)) -> Token:
     user = await session.scalar(select(User).where(User.email == request.email))
     if not user or not verify_password(request.password, user.hashed_password):
+        log_event(
+            "auth.login_failed",
+            actor=request.email,
+            extra={"reason": "invalid_credentials"},
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if not user.is_active:
+        log_event(
+            "auth.login_failed",
+            actor=request.email,
+            extra={"reason": "inactive"},
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User inactive")
     if user.mfa_secret:
         if not request.mfa_token or not verify_mfa_token(user.mfa_secret, request.mfa_token):
+            log_event(
+                "auth.login_failed",
+                actor=request.email,
+                extra={"reason": "mfa_required"},
+            )
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="MFA required")
     token = create_access_token(str(user.id))
+    log_event(
+        "auth.login_succeeded",
+        actor=str(user.id),
+        extra={"email": user.email},
+    )
     return Token(access_token=token)
 
 
@@ -73,6 +100,12 @@ async def request_password_recovery(payload: PasswordRecoveryRequest, session: A
         user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
         session.add(user)
         await session.commit()
+        log_event(
+            "auth.password_recovery_requested",
+            actor=str(user.id),
+            target=str(user.id),
+            extra={"email": user.email},
+        )
     return {"message": "If the email exists, recovery instructions were sent."}
 
 
@@ -86,6 +119,12 @@ async def reset_password(payload: PasswordReset, session: AsyncSession = Depends
     user.reset_token_expires = None
     session.add(user)
     await session.commit()
+    log_event(
+        "auth.password_reset",
+        actor=str(user.id),
+        target=str(user.id),
+        extra={"email": user.email},
+    )
     return {"message": "Password updated"}
 
 
@@ -98,6 +137,11 @@ async def enable_mfa(current_user: User = Depends(get_current_user), session: As
     await session.commit()
     await session.refresh(current_user)
     mfa_uri = generate_mfa_uri(current_user.mfa_secret, current_user.email)
+    log_event(
+        "auth.mfa_enabled",
+        actor=str(current_user.id),
+        target=str(current_user.id),
+    )
     return SignupResponse(user_id=current_user.id, mfa_uri=mfa_uri)
 
 

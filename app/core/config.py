@@ -23,6 +23,17 @@ class Settings(BaseSettings):
 
     analytics_enabled: bool = True
     newsletter_webhook_url: str | None = None
+    alert_webhook_url: str | None = None
+    rate_limit_requests: int = 100
+    rate_limit_window_seconds: int = 60
+    trusted_hosts: list[str] = ["*"]
+    content_security_policy: str = (
+        "default-src 'self'; "
+        "img-src 'self' data: https:; "
+        "script-src 'self'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com data:;"
+    )
 
 
 @lru_cache

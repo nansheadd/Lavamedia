@@ -1,15 +1,29 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Container } from '@/components/layout/container';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { ArticleCard } from '@/components/ui/article-card';
 import { NewsletterForm } from '@/components/forms/newsletter-form';
 import { articles } from '@/lib/mock-data';
+import { JsonLd } from '@/components/seo/json-ld';
+import { homepageJsonLd } from '@/lib/structured-data';
+import { buildMetadata } from '@/lib/seo';
+
+export const revalidate = 600;
+
+export const metadata: Metadata = buildMetadata({
+  title: 'Lavamedia',
+  description: 'Magazine numérique pour journalistes modernes et rédactions agiles.',
+  path: '/',
+  type: 'website'
+});
 
 export default function HomePage() {
   const featured = articles.slice(0, 3);
 
   return (
     <div>
+      <JsonLd data={homepageJsonLd(featured)} />
       <section className="relative overflow-hidden">
         <Container className="grid gap-12 py-16 lg:grid-cols-2 lg:items-center">
           <div className="space-y-6">

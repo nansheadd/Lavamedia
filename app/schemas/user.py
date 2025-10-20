@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from __future__ import annotations
+
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import ConfigDict, EmailStr
 
 from app.models.user import UserRole
+from app.schemas.base import ORMBaseModel, StrictBaseModel
 
 
-class UserBase(BaseModel):
+class UserBase(StrictBaseModel):
     email: EmailStr
     full_name: str | None = None
     role: UserRole = UserRole.author
@@ -18,13 +21,13 @@ class UserCreate(UserBase):
     mfa_enabled: bool = False
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(StrictBaseModel):
     full_name: str | None = None
     role: UserRole | None = None
     is_active: bool | None = None
 
 
-class UserRead(UserBase):
+class UserRead(UserBase, ORMBaseModel):
     id: int
     is_active: bool
     is_superuser: bool
@@ -32,5 +35,4 @@ class UserRead(UserBase):
     updated_at: datetime
     mfa_enabled: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
