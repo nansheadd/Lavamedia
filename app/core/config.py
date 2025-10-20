@@ -120,7 +120,7 @@ class Settings(BaseSettings):
         elif drivername.startswith("postgresql+") and drivername != "postgresql+asyncpg":
             url = url.set(drivername="postgresql+asyncpg")
 
-        return str(url)
+        return url.render_as_string(hide_password=False)
 
     @field_validator("database_url", mode="before")
     @classmethod
