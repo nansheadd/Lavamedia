@@ -3,7 +3,6 @@
   "plugins": ["@tanstack/query"],
   "rules": {
     "react/prop-types": "off",
-    "@next/next/no-html-link-for-pages": "off",
-    "@tanstack/query/no-explicit-any": "warn"
+    "@next/next/no-html-link-for-pages": "off"
   }
 }
