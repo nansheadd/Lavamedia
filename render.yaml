@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: lavamedia-backend
+    env: python
+    plan: starter
+    rootDir: .
+    buildCommand: |
+      pip install --upgrade pip
+      pip install .
+    startCommand: ./deploy/render/backend/start.sh
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lavamedia-db
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://your-frontend-domain
+  - type: web
+    name: lavamedia-frontend
+    env: node
+    plan: starter
+    rootDir: .
+    buildCommand: |
+      npm install
+      npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NEXT_PUBLIC_API_URL
+        value: https://lavamedia-backend.onrender.com
+databases:
+  - name: lavamedia-db
+    plan: starter
