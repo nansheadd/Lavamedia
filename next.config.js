@@ -39,8 +39,7 @@ const nextConfig = {
     ]
   },
   experimental: {
-    typedRoutes: true,
-    serverActions: true
+    typedRoutes: true
   },
   async headers() {
     return [
@@ -55,7 +54,7 @@ const nextConfig = {
         ]
       },
       {
-        source: '/(?!_next).*',
+        source: '/:path((?!_next).*)',
         headers: [
           {
             key: 'Cache-Control',
