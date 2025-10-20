@@ -6,7 +6,9 @@ import { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 
-const navItems = [
+import type { Route } from 'next';
+
+const navItems: { href: Route; label: string }[] = [
   { href: '/admin', label: 'Vue d’ensemble' },
   { href: '/admin/utilisateurs', label: 'Utilisateurs' },
   { href: '/admin/seo', label: 'SEO' },
