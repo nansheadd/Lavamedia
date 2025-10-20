@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import types
 
+import logging
+
 from app.services import alerting
 from app.services.alerting import AlertManager
 
@@ -58,3 +60,32 @@ def test_notify_uses_httpx_when_available(monkeypatch) -> None:
     assert payload["context"] == {"foo": "bar"}
     assert calls["timeout"] is None
     assert calls["init_kwargs"]["timeout"] == 5
+
+
+def test_notify_maps_severity_levels(monkeypatch) -> None:
+    manager = AlertManager()
+    levels: list[int] = []
+
+    def capture(level: int, message: str, *, extra: dict | None = None) -> None:
+        levels.append(level)
+
+    monkeypatch.setattr(manager.logger, "log", capture)
+
+    for severity in [
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "critical",
+        "unexpected",
+    ]:
+        asyncio.run(manager.notify("msg", severity=severity))
+
+    assert levels == [
+        logging.DEBUG,
+        logging.INFO,
+        logging.WARNING,
+        logging.ERROR,
+        logging.CRITICAL,
+        logging.INFO,
+    ]

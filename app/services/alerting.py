@@ -24,13 +24,14 @@ class AlertManager:
             "severity": severity,
             "context": context or {},
         }
-        level = (
-            logging.WARNING
-            if severity == "warning"
-            else logging.ERROR
-            if severity == "error"
-            else logging.CRITICAL
-        )
+        severity_levels = {
+            "debug": logging.DEBUG,
+            "info": logging.INFO,
+            "warning": logging.WARNING,
+            "error": logging.ERROR,
+            "critical": logging.CRITICAL,
+        }
+        level = severity_levels.get(severity.lower(), logging.INFO)
         self.logger.log(level, message, extra={"severity": severity, **payload["context"]})
         if not self.webhook_url:
             return
