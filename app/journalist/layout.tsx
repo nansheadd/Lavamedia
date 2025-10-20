@@ -2,11 +2,12 @@
 
 import { Container } from '@/components/layout/container';
 import Link from 'next/link';
+import type { Route } from 'next';
 import { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 
-const navItems = [
+const navItems: { href: Route; label: string }[] = [
   { href: '/journalist', label: 'Dashboard' },
   { href: '/journalist/brouillons', label: 'Brouillons' },
   { href: '/journalist/editeur', label: 'Éditeur' },
