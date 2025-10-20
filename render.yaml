@@ -2,7 +2,7 @@ services:
   - type: web
     name: lavamedia-backend
     env: python
-    plan: starter
+    plan: free
     rootDir: .
     buildCommand: |
       pip install --upgrade pip
@@ -27,7 +27,7 @@ services:
   - type: web
     name: lavamedia-frontend
     env: node
-    plan: starter
+    plan: free
     rootDir: .
     buildCommand: |
       npm install
