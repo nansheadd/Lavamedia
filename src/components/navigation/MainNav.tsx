@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { Route } from 'next';
 import { usePathname } from 'next/navigation';
 import { Bars3Icon } from '@heroicons/react/24/solid';
 import { Disclosure } from '@headlessui/react';
@@ -13,7 +14,7 @@ const navItems = [
   { href: '/rubriques', label: 'Rubriques' },
   { href: '/recherche', label: 'Recherche' },
   { href: '/newsletter', label: 'Newsletter' }
-];
+] satisfies Array<{ href: Route; label: string }>;
 
 export function MainNav() {
   const pathname = usePathname();
@@ -72,10 +73,10 @@ export function MainNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                    className={clsx(
-                      'block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
-                      pathname?.startsWith(item.href) && 'bg-primary-100 text-primary-700'
-                    )}
+                  className={clsx(
+                    'block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
+                    pathname?.startsWith(item.href) && 'bg-primary-100 text-primary-700'
+                  )}
                 >
                   {item.label}
                 </Link>

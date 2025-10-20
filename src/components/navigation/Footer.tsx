@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Route } from 'next';
 import { Container } from '@/components/layout/container';
 
 const footerLinks = [
@@ -18,7 +19,10 @@ const footerLinks = [
       { label: 'Aide', href: '/support' }
     ]
   }
-];
+] satisfies Array<{
+  title: string;
+  links: Array<{ label: string; href: Route }>;
+}>;
 
 export function Footer() {
   return (
