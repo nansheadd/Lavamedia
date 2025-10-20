@@ -14,6 +14,7 @@ from app.schemas.content import (
     ArticleStatusCreate,
     ArticleStatusRead,
     ArticleUpdate,
+    ArticleWorkflowUpdate,
     MediaAssetCreate,
     MediaAssetRead,
     SectionCreate,
@@ -187,7 +188,7 @@ async def update_article(
 )
 async def update_workflow_state(
     article_id: int,
-    workflow_state: ArticleWorkflowState,
+    payload: ArticleWorkflowUpdate,
     session: AsyncSession = Depends(get_session),
     search_service: SearchService = Depends(get_search_service),
 ) -> Article:
@@ -200,6 +201,7 @@ async def update_workflow_state(
         ArticleWorkflowState.published: {ArticleWorkflowState.archived},
         ArticleWorkflowState.archived: set(),
     }
+    workflow_state = payload.workflow_state
     if workflow_state not in valid_transitions[article.workflow_state]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid workflow transition")
     article.workflow_state = workflow_state

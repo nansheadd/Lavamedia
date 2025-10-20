@@ -64,14 +64,14 @@ def test_article_workflow(client: TestClient) -> None:
     response = client.post(
         f"/api/content/articles/{article_id}/workflow",
         headers={"Authorization": f"Bearer {editor_token}"},
-        params={"workflow_state": ArticleWorkflowState.review.value},
+        json={"workflow_state": ArticleWorkflowState.review.value},
     )
     assert response.status_code == 200
 
     response = client.post(
         f"/api/content/articles/{article_id}/workflow",
         headers={"Authorization": f"Bearer {editor_token}"},
-        params={"workflow_state": ArticleWorkflowState.published.value},
+        json={"workflow_state": ArticleWorkflowState.published.value},
     )
     assert response.status_code == 200
     assert response.json()["workflow_state"] == ArticleWorkflowState.published.value
