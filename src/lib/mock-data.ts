@@ -1,4 +1,6 @@
-export const categories = [
+import type { ArticleSummary, CategorySummary } from '@/types/content';
+
+export const categories: CategorySummary[] = [
   {
     slug: 'planete',
     title: 'Planète',
@@ -16,7 +18,7 @@ export const categories = [
   }
 ];
 
-export const articles = [
+export const articles: ArticleSummary[] = [
   {
     slug: 'oceans-en-peril',
     title: 'Océans en péril : comment les rédactions couvrent l’urgence bleue',

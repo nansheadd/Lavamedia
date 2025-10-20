@@ -2,34 +2,42 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from pydantic import EmailStr
+
+from app.schemas.base import StrictBaseModel
 
 
-class Token(BaseModel):
+class Token(StrictBaseModel):
     access_token: str
     token_type: str = "bearer"
 
 
-class TokenPayload(BaseModel):
+class TokenPayload(StrictBaseModel):
     sub: str | None = None
     exp: datetime | None = None
 
 
-class LoginRequest(BaseModel):
+class LoginRequest(StrictBaseModel):
     email: EmailStr
     password: str
     mfa_token: str | None = None
 
 
-class SignupResponse(BaseModel):
+class SignupResponse(StrictBaseModel):
     user_id: int
     mfa_uri: str | None = None
 
 
-class PasswordRecoveryRequest(BaseModel):
+class PasswordRecoveryRequest(StrictBaseModel):
     email: EmailStr
 
 
-class PasswordReset(BaseModel):
+class PasswordReset(StrictBaseModel):
     token: str
     new_password: str

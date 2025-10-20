@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
 
-export function buildMetadata({
-  title,
-  description,
-  path,
-  image
-}: {
+type BuildMetadataOptions = {
   title: string;
   description: string;
   path: string;
   image?: string;
-}): Metadata {
+  type?: 'article' | 'website' | 'collection';
+  publishedTime?: string;
+  modifiedTime?: string;
+};
+
+export function buildMetadata({ title, description, path, image, type = 'website', publishedTime, modifiedTime }: BuildMetadataOptions): Metadata {
   const url = `https://www.lavamedia.example${path}`;
   return {
     title,
@@ -21,7 +21,7 @@ export function buildMetadata({
     openGraph: {
       title,
       description,
-      type: 'article',
+      type,
       url,
       images: image
         ? [
@@ -32,7 +32,9 @@ export function buildMetadata({
               alt: title
             }
           ]
-        : undefined
+        : undefined,
+      publishedTime,
+      modifiedTime
     },
     twitter: {
       card: 'summary_large_image',

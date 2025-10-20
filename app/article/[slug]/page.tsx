@@ -1,23 +1,30 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Container } from '@/components/layout/container';
 import { articles } from '@/lib/mock-data';
 import { buildMetadata } from '@/lib/seo';
 import { Badge } from '@/components/ui/badge';
+import { JsonLd } from '@/components/seo/json-ld';
+import { articleJsonLd } from '@/lib/structured-data';
 
 export const dynamicParams = false;
+export const revalidate = 1800;
 
 export function generateStaticParams() {
   return articles.map((article) => ({ slug: article.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
+export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const article = articles.find((item) => item.slug === params.slug);
   if (!article) return {};
   return buildMetadata({
     title: article.title,
     description: article.excerpt,
-    path: `/article/${article.slug}`
+    path: `/article/${article.slug}`,
+    type: 'article',
+    publishedTime: article.publishedAt,
+    modifiedTime: article.updatedAt ?? article.publishedAt
   });
 }
 
@@ -27,6 +34,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
 
   return (
     <article className="bg-white py-16 dark:bg-slate-950">
+      <JsonLd data={articleJsonLd(article)} />
       <Container className="prose prose-slate max-w-3xl dark:prose-invert">
         <nav aria-label="Fil d’ariane" className="not-prose mb-6 text-sm text-slate-500">
           <Link className="hover:text-primary-600" href="/">
