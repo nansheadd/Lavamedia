@@ -1,0 +1,40 @@
+[project]
+name = "lavamedia"
+version = "0.1.0"
+description = "CMS backend built with FastAPI"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Lavamedia", email = "dev@lavamedia.example"}]
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "sqlalchemy>=2.0",
+  "alembic>=1.13",
+  "pydantic-settings>=2.2",
+  "passlib[bcrypt]>=1.7",
+  "python-jose[cryptography]>=3.3",
+  "pyotp>=2.9",
+  "email-validator>=2.0",
+  "python-multipart>=0.0.9"
+]
+
+[project.optional-dependencies]
+search = ["meilisearch-python>=0.30", "elasticsearch>=8.12"]
+
+[project.urls]
+homepage = "https://example.com/lavamedia"
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["app"]
+
