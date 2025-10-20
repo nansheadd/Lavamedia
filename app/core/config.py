@@ -3,11 +3,45 @@ import json
 from typing import List, Optional
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, EnvSettingsSource, SettingsConfigDict
+
+
+class BlankFriendlyEnvSettingsSource(EnvSettingsSource):
+    """Custom environment source that tolerates blank complex values."""
+
+    def prepare_field_value(self, field_name, field, field_value, value_is_complex):
+        if value_is_complex and isinstance(field_value, (str, bytes)):
+            if isinstance(field_value, bytes):
+                field_value = field_value.decode()
+
+            if not field_value.strip():
+                return ""
+
+        return super().prepare_field_value(field_name, field, field_value, value_is_complex)
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls,
+        init_settings,
+        env_settings,
+        dotenv_settings,
+        file_secret_settings,
+    ):
+        return (
+            init_settings,
+            BlankFriendlyEnvSettingsSource(settings_cls),
+            dotenv_settings,
+            file_secret_settings,
+        )
 
     app_name: str = "Lavamedia CMS"
     environment: str = "development"
