@@ -41,4 +41,4 @@ services:
         value: https://lavamedia-backend.onrender.com
 databases:
   - name: lavamedia-db
-    plan: starter
+    plan: standard
