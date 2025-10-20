@@ -5,7 +5,7 @@ type BuildMetadataOptions = {
   description: string;
   path: string;
   image?: string;
-  type?: 'article' | 'website' | 'collection';
+  type?: 'article' | 'website';
   publishedTime?: string;
   modifiedTime?: string;
 };
