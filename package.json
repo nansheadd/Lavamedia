@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "fetch:wordpress": "node scripts/fetch-wordpress-posts.js"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",
