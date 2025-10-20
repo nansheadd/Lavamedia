@@ -84,8 +84,11 @@ export async function getProfile() {
   if (!token) throw new Error('Utilisateur non authentifié');
   const payload = decodeToken(token);
   if (!payload) throw new Error('Token invalide');
-  const { exp, ...profile } = payload;
-  return profile;
+  const { exp, sub, ...rest } = payload;
+  return {
+    id: sub,
+    ...rest
+  };
 }
 
 export function getAccessToken() {
