@@ -3,9 +3,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import httpx
-
 from app.core.config import settings
+
+try:
+    import httpx
+except ImportError:  # pragma: no cover - optional dependency
+    httpx = None  # type: ignore[assignment]
 
 
 class AlertManager:
@@ -30,6 +33,12 @@ class AlertManager:
         )
         self.logger.log(level, message, extra={"severity": severity, **payload["context"]})
         if not self.webhook_url:
+            return
+        if httpx is None:
+            self.logger.warning(
+                "alert.httpx_missing",
+                extra={"severity": severity, "webhook_url": self.webhook_url},
+            )
             return
         try:
             async with httpx.AsyncClient(timeout=5) as client:
