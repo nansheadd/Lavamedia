@@ -109,3 +109,7 @@ class ArticleStatusRead(ArticleStatusBase, ORMBaseModel):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ArticleWorkflowUpdate(StrictBaseModel):
+    workflow_state: ArticleWorkflowState
