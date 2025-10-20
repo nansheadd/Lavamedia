@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, EnvSettingsSource, SettingsConfigDict
+from sqlalchemy.engine.url import make_url
 
 
 class BlankFriendlyEnvSettingsSource(EnvSettingsSource):
@@ -105,6 +106,37 @@ class Settings(BaseSettings):
             return parsed
 
         return [origin.strip() for origin in value.split(",") if origin.strip()]
+
+    @staticmethod
+    def _ensure_asyncpg_driver(value: str) -> str:
+        try:
+            url = make_url(value)
+        except Exception:
+            return value
+
+        drivername = url.drivername
+        if drivername in {"postgresql", "postgres"}:
+            url = url.set(drivername="postgresql+asyncpg")
+        elif drivername.startswith("postgresql+") and drivername != "postgresql+asyncpg":
+            url = url.set(drivername="postgresql+asyncpg")
+
+        return str(url)
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def ensure_asyncpg_database_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+
+        return cls._ensure_asyncpg_driver(value)
+
+    @field_validator("alembic_database_url", mode="before")
+    @classmethod
+    def ensure_asyncpg_alembic_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+
+        return cls._ensure_asyncpg_driver(value)
 
 
 @lru_cache
