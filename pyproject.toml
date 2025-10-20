@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-search = ["meilisearch-python>=0.30", "elasticsearch>=8.12"]
+search = ["meilisearch>=0.30", "elasticsearch>=8.12"]
 
 [project.urls]
 homepage = "https://example.com/lavamedia"
