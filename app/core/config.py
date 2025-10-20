@@ -1,6 +1,8 @@
 from functools import lru_cache
+import json
 from typing import List, Optional
 
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +17,7 @@ class Settings(BaseSettings):
     refresh_token_expire_minutes: int = 60 * 24 * 14
     database_url: str = "sqlite+aiosqlite:///./lavamedia.db"
     alembic_database_url: Optional[str] = None
-    allowed_origins: List[str] = ["*"]
+    allowed_origins: List[str] = Field(default_factory=lambda: ["*"])
     mfa_issuer: str = "Lavamedia"
     search_provider: str = "meilisearch"
     search_url: str | None = None
@@ -34,6 +36,28 @@ class Settings(BaseSettings):
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com data:;"
     )
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, value: List[str] | str | None) -> List[str] | str | None:
+        if value is None:
+            return value
+        if isinstance(value, list):
+            return value
+
+        value = value.strip()
+        if not value:
+            return []
+
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            parsed = None
+
+        if isinstance(parsed, list):
+            return parsed
+
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
 
 
 @lru_cache
