@@ -14,5 +14,13 @@ class AnalyticsEvent(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     article_id: Mapped[int | None] = mapped_column(ForeignKey("articles.id", ondelete="SET NULL"))
     event_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    metadata: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    _metadata: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+    @property
+    def metadata(self) -> dict | None:
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, value: dict | None) -> None:
+        self._metadata = value
