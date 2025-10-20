@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import ConfigDict
+from pydantic import AliasChoices, ConfigDict, Field
 
 from app.schemas.base import StrictBaseModel
 
@@ -10,7 +10,11 @@ from app.schemas.base import StrictBaseModel
 class AnalyticsEventCreate(StrictBaseModel):
     article_id: int | None = None
     event_type: str
-    metadata: dict | None = None
+    metadata: dict | None = Field(
+        default=None,
+        validation_alias=AliasChoices("metadata", "_metadata"),
+        serialization_alias="metadata",
+    )
 
 
 class AnalyticsEventRead(AnalyticsEventCreate):
