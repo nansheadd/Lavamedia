@@ -15,9 +15,22 @@ class BlankFriendlyEnvSettingsSource(EnvSettingsSource):
                 field_value = field_value.decode()
 
             if not field_value.strip():
-                return ""
+                if field_name == "allowed_origins":
+                    return []
+                return None
 
         return super().prepare_field_value(field_name, field, field_value, value_is_complex)
+
+    def decode_complex_value(self, field_name, field, value):
+        if isinstance(value, str) and not value.strip():
+            if field_name == "allowed_origins":
+                return []
+            return None
+
+        try:
+            return super().decode_complex_value(field_name, field, value)
+        except json.JSONDecodeError:
+            return value
 
 
 class Settings(BaseSettings):
@@ -75,7 +88,7 @@ class Settings(BaseSettings):
     @classmethod
     def parse_allowed_origins(cls, value: List[str] | str | None) -> List[str] | str | None:
         if value is None:
-            return value
+            return []
         if isinstance(value, list):
             return value
 
