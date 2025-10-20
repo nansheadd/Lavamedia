@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Any
+from uuid import uuid4
 
 import pyotp
 from jose import JWTError, jwt
@@ -9,15 +10,16 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 ALGORITHM = "HS256"
 
 
 def create_access_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.access_token_expire_minutes)
-    expire = datetime.utcnow() + expires_delta
-    to_encode = {"sub": str(subject), "exp": expire}
+    now = datetime.utcnow()
+    expire = now + expires_delta
+    to_encode = {"sub": str(subject), "exp": expire, "iat": now, "jti": uuid4().hex}
     return jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
 
 
