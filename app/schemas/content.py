@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import ConfigDict, Field
+from pydantic import AliasChoices, ConfigDict, Field
 
 from app.models.content import ArticleWorkflowState
 from app.schemas.base import ORMBaseModel, StrictBaseModel
@@ -78,7 +78,11 @@ class MediaAssetBase(StrictBaseModel):
     url: str
     media_type: str
     description: str | None = None
-    metadata: str | None = None
+    metadata: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("metadata", "_metadata"),
+        serialization_alias="metadata",
+    )
 
 
 class MediaAssetCreate(MediaAssetBase):

@@ -65,14 +65,6 @@ class MediaAsset(Base):
     _metadata: Mapped[str | None] = mapped_column("metadata", Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
-    @property
-    def metadata(self) -> str | None:
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, value: str | None) -> None:
-        self._metadata = value
-
 
 class Article(Base):
     __tablename__ = "articles"
