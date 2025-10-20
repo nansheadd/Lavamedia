@@ -4,12 +4,6 @@ from datetime import datetime
 
 from pydantic import EmailStr
 
-from __future__ import annotations
-
-from datetime import datetime
-
-from pydantic import EmailStr
-
 from app.schemas.base import StrictBaseModel
 
 
