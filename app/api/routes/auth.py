@@ -4,157 +4,273 @@ import secrets
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy import select
 
-from app.api.deps.auth import get_current_user
+from app.api.deps.auth import get_current_user, require_roles
 from app.core.security import (
     create_access_token,
     create_mfa_secret,
     generate_mfa_uri,
     get_password_hash,
+    verify_access_token,
     verify_mfa_token,
     verify_password,
 )
-from app.db.session import get_session
-from app.models.user import User
+from app.models.user import Role, User
 from app.schemas.auth import (
     LoginRequest,
     PasswordRecoveryRequest,
     PasswordReset,
+    RefreshRequest,
     SignupResponse,
     Token,
 )
-from app.schemas.user import UserCreate, UserRead
-from app.services.audit import log_event
+from app.schemas.user import (
+    RoleCreate,
+    RoleRead,
+    RoleUpdate,
+    UserCreate,
+    UserRead,
+    UserUpdate,
+)
+from app.services.auth import AuthService, get_auth_service
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(tags=["auth"])
 
 
-@router.post("/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
-async def signup(user_in: UserCreate, session: AsyncSession = Depends(get_session)) -> SignupResponse:
-    if await session.scalar(select(User).where(User.email == user_in.email)):
+def _user_to_schema(user: User) -> UserRead:
+    return UserRead.model_validate(
+        user,
+        from_attributes=True,
+        update={"mfa_enabled": bool(user.mfa_secret)},
+    )
+
+
+@router.post("/auth/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
+async def signup(
+    user_in: UserCreate,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> SignupResponse:
+    existing = await auth_service.get_user_by_email(user_in.email)
+    if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     hashed_password = get_password_hash(user_in.password)
     mfa_secret = create_mfa_secret() if user_in.mfa_enabled else None
-    user = User(
+    user = await auth_service.create_user(
         email=user_in.email,
-        full_name=user_in.full_name,
         hashed_password=hashed_password,
-        role=user_in.role,
-        mfa_secret=mfa_secret,
+        full_name=user_in.full_name,
+        status=user_in.status,
+        role_ids=user_in.role_ids or None,
     )
-    session.add(user)
-    await session.commit()
-    await session.refresh(user)
+    user.mfa_secret = mfa_secret
+    auth_service.session.add(user)
+    await auth_service.session.commit()
+    await auth_service.session.refresh(user)
 
     mfa_uri = generate_mfa_uri(mfa_secret, user.email) if mfa_secret else None
-    log_event(
-        "user.signup",
-        actor=str(user.id),
-        target=str(user.id),
-        extra={"email": user.email, "mfa_enabled": bool(mfa_secret)},
-    )
     return SignupResponse(user_id=user.id, mfa_uri=mfa_uri)
 
 
-@router.post("/login", response_model=Token)
-async def login(request: LoginRequest, session: AsyncSession = Depends(get_session)) -> Token:
-    user = await session.scalar(select(User).where(User.email == request.email))
+@router.post("/auth/login", response_model=Token)
+async def login(
+    request: LoginRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> Token:
+    user = await auth_service.get_user_by_email(request.email)
     if not user or not verify_password(request.password, user.hashed_password):
-        log_event(
-            "auth.login_failed",
-            actor=request.email,
-            extra={"reason": "invalid_credentials"},
-        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    if not user.is_active:
-        log_event(
-            "auth.login_failed",
-            actor=request.email,
-            extra={"reason": "inactive"},
-        )
+    if not user.is_active or user.status != "active":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User inactive")
     if user.mfa_secret:
         if not request.mfa_token or not verify_mfa_token(user.mfa_secret, request.mfa_token):
-            log_event(
-                "auth.login_failed",
-                actor=request.email,
-                extra={"reason": "mfa_required"},
-            )
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="MFA required")
     token = create_access_token(str(user.id))
-    log_event(
-        "auth.login_succeeded",
-        actor=str(user.id),
-        extra={"email": user.email},
-    )
+    await auth_service.record_login(user)
+    await auth_service.session.commit()
     return Token(access_token=token)
 
 
-@router.post("/recover", status_code=status.HTTP_202_ACCEPTED)
-async def request_password_recovery(payload: PasswordRecoveryRequest, session: AsyncSession = Depends(get_session)) -> dict:
-    user = await session.scalar(select(User).where(User.email == payload.email))
+@router.post("/auth/refresh", response_model=Token)
+async def refresh_token(payload: RefreshRequest) -> Token:
+    user_id = verify_access_token(payload.refresh_token)
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+    token = create_access_token(user_id)
+    return Token(access_token=token)
+
+
+@router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout() -> None:
+    return None
+
+
+@router.post("/auth/recover", status_code=status.HTTP_202_ACCEPTED)
+async def request_password_recovery(
+    payload: PasswordRecoveryRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> dict:
+    user = await auth_service.get_user_by_email(payload.email)
     if user:
         user.reset_token = secrets.token_urlsafe(32)
         user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
-        session.add(user)
-        await session.commit()
-        log_event(
-            "auth.password_recovery_requested",
-            actor=str(user.id),
-            target=str(user.id),
-            extra={"email": user.email},
-        )
+        auth_service.session.add(user)
+        await auth_service.session.commit()
     return {"message": "If the email exists, recovery instructions were sent."}
 
 
-@router.post("/reset", status_code=status.HTTP_200_OK)
-async def reset_password(payload: PasswordReset, session: AsyncSession = Depends(get_session)) -> dict:
-    user = await session.scalar(select(User).where(User.reset_token == payload.token))
+@router.post("/auth/reset", status_code=status.HTTP_200_OK)
+async def reset_password(
+    payload: PasswordReset,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> dict:
+    user = await auth_service.session.scalar(select(User).where(User.reset_token == payload.token))
     if not user or not user.reset_token_expires or user.reset_token_expires < datetime.utcnow():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
     user.hashed_password = get_password_hash(payload.new_password)
     user.reset_token = None
     user.reset_token_expires = None
-    session.add(user)
-    await session.commit()
-    log_event(
-        "auth.password_reset",
-        actor=str(user.id),
-        target=str(user.id),
-        extra={"email": user.email},
-    )
+    auth_service.session.add(user)
+    await auth_service.session.commit()
     return {"message": "Password updated"}
 
 
-@router.post("/mfa/enable", response_model=SignupResponse)
-async def enable_mfa(current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)) -> SignupResponse:
-    if current_user.mfa_secret:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MFA already enabled")
-    current_user.mfa_secret = create_mfa_secret()
-    session.add(current_user)
-    await session.commit()
-    await session.refresh(current_user)
-    mfa_uri = generate_mfa_uri(current_user.mfa_secret, current_user.email)
-    log_event(
-        "auth.mfa_enabled",
-        actor=str(current_user.id),
-        target=str(current_user.id),
-    )
-    return SignupResponse(user_id=current_user.id, mfa_uri=mfa_uri)
+@router.get(
+    "/users",
+    response_model=list[UserRead],
+    dependencies=[Depends(require_roles("admin"))],
+)
+async def list_users(
+    auth_service: AuthService = Depends(get_auth_service),
+) -> list[UserRead]:
+    users = await auth_service.list_users()
+    return [_user_to_schema(user) for user in users]
 
 
-@router.get("/me", response_model=UserRead)
-async def read_me(current_user: User = Depends(get_current_user)) -> UserRead:
-    return UserRead(
-        id=current_user.id,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        role=current_user.role,
-        is_active=current_user.is_active,
-        is_superuser=current_user.is_superuser,
-        created_at=current_user.created_at,
-        updated_at=current_user.updated_at,
-        mfa_enabled=bool(current_user.mfa_secret),
+@router.post(
+    "/users",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_roles("admin"))],
+)
+async def create_user(
+    payload: UserCreate,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> UserRead:
+    if await auth_service.get_user_by_email(payload.email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    user = await auth_service.create_user(
+        email=payload.email,
+        hashed_password=get_password_hash(payload.password),
+        full_name=payload.full_name,
+        status=payload.status,
+        role_ids=payload.role_ids or None,
     )
+    user.mfa_secret = create_mfa_secret() if payload.mfa_enabled else None
+    auth_service.session.add(user)
+    await auth_service.session.commit()
+    await auth_service.session.refresh(user)
+    return _user_to_schema(user)
+
+
+@router.patch(
+    "/users/{user_id}",
+    response_model=UserRead,
+    dependencies=[Depends(require_roles("admin"))],
+)
+async def update_user(
+    user_id: int,
+    payload: UserUpdate,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> UserRead:
+    user = await auth_service.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    await auth_service.update_user(
+        user,
+        full_name=payload.full_name,
+        status=payload.status,
+        is_active=payload.is_active,
+        role_ids=payload.role_ids,
+    )
+    auth_service.session.add(user)
+    await auth_service.session.commit()
+    await auth_service.session.refresh(user)
+    return _user_to_schema(user)
+
+
+@router.delete(
+    "/users/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_roles("admin"))],
+)
+async def delete_user(
+    user_id: int,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> None:
+    user = await auth_service.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    await auth_service.delete_user(user)
+    await auth_service.session.commit()
+
+
+@router.get("/roles", response_model=list[RoleRead], dependencies=[Depends(require_roles("admin"))])
+async def list_roles(auth_service: AuthService = Depends(get_auth_service)) -> list[RoleRead]:
+    roles = await auth_service.list_roles()
+    return [RoleRead.model_validate(role, from_attributes=True) for role in roles]
+
+
+@router.post(
+    "/roles",
+    response_model=RoleRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_roles("admin"))],
+)
+async def create_role(
+    payload: RoleCreate,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> RoleRead:
+    role = await auth_service.create_role(
+        name=payload.name,
+        description=payload.description,
+        permission_codes=payload.permission_codes,
+    )
+    auth_service.session.add(role)
+    await auth_service.session.commit()
+    await auth_service.session.refresh(role)
+    return RoleRead.model_validate(role, from_attributes=True)
+
+
+@router.patch(
+    "/roles/{role_id}",
+    response_model=RoleRead,
+    dependencies=[Depends(require_roles("admin"))],
+)
+async def update_role(
+    role_id: int,
+    payload: RoleUpdate,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> RoleRead:
+    role = await auth_service.session.get(Role, role_id)
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    await auth_service.update_role(
+        role,
+        description=payload.description,
+        permission_codes=payload.permission_codes,
+    )
+    auth_service.session.add(role)
+    await auth_service.session.commit()
+    await auth_service.session.refresh(role)
+    return RoleRead.model_validate(role, from_attributes=True)
+
+
+@router.get(
+    "/permissions",
+    response_model=list[str],
+    dependencies=[Depends(require_roles("admin"))],
+)
+async def list_permissions(auth_service: AuthService = Depends(get_auth_service)) -> list[str]:
+    permissions = await auth_service.list_permissions()
+    return [permission.code for permission in permissions]

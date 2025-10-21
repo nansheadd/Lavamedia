@@ -6,7 +6,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from app.api.routes import analytics, auth, content, newsletter
+from app.api.routes import analytics, auth, content, media, newsletter, notification, search, seo
 from app.core.logging import setup_logging
 from app.core.config import settings
 from app.middleware.metrics import MetricsMiddleware
@@ -28,8 +28,12 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(content.router, prefix="/api")
+app.include_router(media.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(newsletter.router, prefix="/api")
+app.include_router(seo.router, prefix="/api")
+app.include_router(notification.router, prefix="/api")
+app.include_router(search.router, prefix="/api")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)
 if settings.trusted_hosts:
