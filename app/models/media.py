@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import JSON
 
 from app.db.session import Base
+from app.db.types import JSONType
 
 if TYPE_CHECKING:  # pragma: no cover - only used for type checking
     from app.models.content import ContentMedia
@@ -25,7 +25,7 @@ class MediaAsset(Base):
     width: Mapped[int | None] = mapped_column(Integer)
     height: Mapped[int | None] = mapped_column(Integer)
     duration: Mapped[float | None] = mapped_column(Float)
-    _metadata: Mapped[dict | None] = mapped_column("metadata", JSON)
+    _metadata: Mapped[dict | None] = mapped_column("metadata", JSONType)
     uploaded_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
