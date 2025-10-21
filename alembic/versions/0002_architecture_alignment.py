@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "0002"
@@ -14,6 +15,11 @@ depends_on = None
 
 def _is_postgres(bind) -> bool:
     return bind.dialect.name == "postgresql"
+
+
+JSON_TYPE = sa.JSON().with_variant(
+    postgresql.JSONB(astext_type=sa.Text()), "postgresql"
+)
 
 
 def upgrade() -> None:
@@ -133,7 +139,7 @@ def upgrade() -> None:
         sa.Column("content_id", sa.Integer(), sa.ForeignKey("content_items.id", ondelete="CASCADE"), nullable=False),
         sa.Column("version_number", sa.Integer(), nullable=False),
         sa.Column("body", sa.Text(), nullable=False),
-        sa.Column("diff", sa.JSON(), nullable=True),
+        sa.Column("diff", JSON_TYPE, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.UniqueConstraint("content_id", "version_number", name="uq_content_versions_content_id_version_number"),
     )
@@ -148,7 +154,7 @@ def upgrade() -> None:
         sa.Column("width", sa.Integer(), nullable=True),
         sa.Column("height", sa.Integer(), nullable=True),
         sa.Column("duration", sa.Float(), nullable=True),
-        sa.Column("metadata", sa.JSON(), nullable=True),
+        sa.Column("metadata", JSON_TYPE, nullable=True),
         sa.Column("uploaded_by", sa.Integer(), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
@@ -182,8 +188,8 @@ def upgrade() -> None:
         sa.Column("meta_title", sa.String(length=255), nullable=True),
         sa.Column("meta_description", sa.String(length=255), nullable=True),
         sa.Column("canonical_url", sa.String(length=512), nullable=True),
-        sa.Column("og_tags", sa.JSON(), nullable=True),
-        sa.Column("schema_markup", sa.JSON(), nullable=True),
+        sa.Column("og_tags", JSON_TYPE, nullable=True),
+        sa.Column("schema_markup", JSON_TYPE, nullable=True),
     )
 
     op.create_table(
@@ -192,7 +198,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
         sa.Column("session_id", sa.String(length=128), nullable=True),
         sa.Column("event_type", sa.String(length=100), nullable=False),
-        sa.Column("payload", sa.JSON(), nullable=True),
+        sa.Column("payload", JSON_TYPE, nullable=True),
         sa.Column("occurred_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
 
@@ -200,7 +206,7 @@ def upgrade() -> None:
         "dashboards",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("name", sa.String(length=255), nullable=False, unique=True),
-        sa.Column("definition", sa.JSON(), nullable=False),
+        sa.Column("definition", JSON_TYPE, nullable=False),
         sa.Column("owner_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
@@ -219,11 +225,41 @@ def upgrade() -> None:
 
     # Create GIN indexes on PostgreSQL
     if _is_postgres(bind):
-        op.create_index("ix_seo_metadata_og_tags_gin", "seo_metadata", [sa.text("og_tags")], postgresql_using="gin")
-        op.create_index("ix_seo_metadata_schema_markup_gin", "seo_metadata", [sa.text("schema_markup")], postgresql_using="gin")
-        op.create_index("ix_media_assets_metadata_gin", "media_assets", [sa.text("metadata")], postgresql_using="gin")
-        op.create_index("ix_analytics_events_payload_gin", "analytics_events", [sa.text("payload")], postgresql_using="gin")
-        op.create_index("ix_dashboards_definition_gin", "dashboards", [sa.text("definition")], postgresql_using="gin")
+        op.create_index(
+            "ix_seo_metadata_og_tags_gin",
+            "seo_metadata",
+            ["og_tags"],
+            postgresql_using="gin",
+            postgresql_ops={"og_tags": "jsonb_path_ops"},
+        )
+        op.create_index(
+            "ix_seo_metadata_schema_markup_gin",
+            "seo_metadata",
+            ["schema_markup"],
+            postgresql_using="gin",
+            postgresql_ops={"schema_markup": "jsonb_path_ops"},
+        )
+        op.create_index(
+            "ix_media_assets_metadata_gin",
+            "media_assets",
+            ["metadata"],
+            postgresql_using="gin",
+            postgresql_ops={"metadata": "jsonb_path_ops"},
+        )
+        op.create_index(
+            "ix_analytics_events_payload_gin",
+            "analytics_events",
+            ["payload"],
+            postgresql_using="gin",
+            postgresql_ops={"payload": "jsonb_path_ops"},
+        )
+        op.create_index(
+            "ix_dashboards_definition_gin",
+            "dashboards",
+            ["definition"],
+            postgresql_using="gin",
+            postgresql_ops={"definition": "jsonb_path_ops"},
+        )
 
     # Seed permissions and roles
     permissions_table = sa.table(

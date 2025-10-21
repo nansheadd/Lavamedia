@@ -16,9 +16,9 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import JSON
 
 from app.db.session import Base
+from app.db.types import JSONType
 
 if TYPE_CHECKING:  # pragma: no cover - only used for type checking
     from app.models.media import MediaAsset
@@ -84,7 +84,7 @@ class ContentVersion(Base):
     content_id: Mapped[int] = mapped_column(ForeignKey("content_items.id", ondelete="CASCADE"), nullable=False)
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
-    diff: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    diff: Mapped[dict | None] = mapped_column(JSONType, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
     content: Mapped[ContentItem] = relationship(back_populates="versions")
