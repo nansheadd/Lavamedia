@@ -23,6 +23,10 @@ class LoginRequest(StrictBaseModel):
     mfa_token: str | None = None
 
 
+class RefreshRequest(StrictBaseModel):
+    refresh_token: str
+
+
 class SignupResponse(StrictBaseModel):
     user_id: int
     mfa_uri: str | None = None
