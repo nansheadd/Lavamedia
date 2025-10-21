@@ -19,6 +19,8 @@ def _is_postgres(bind) -> bool:
 def upgrade() -> None:
     bind = op.get_bind()
 
+    is_postgres = _is_postgres(bind)
+
     # Drop legacy CMS tables
     for table in (
         "article_tags",
@@ -35,11 +37,6 @@ def upgrade() -> None:
         except Exception:
             pass
 
-    # Drop old enum types on PostgreSQL
-    if _is_postgres(bind):
-        for enum_name in ("articleworkflowstate", "userrole"):
-            op.execute(sa.text(f"DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_type WHERE typname = '{enum_name}') THEN DROP TYPE {enum_name}; END IF; END $$;"))
-
     # Update users table
     with op.batch_alter_table("users") as batch:
         if bind.dialect.name == "sqlite":
@@ -53,6 +50,15 @@ def upgrade() -> None:
         batch.add_column(sa.Column("last_login_at", sa.DateTime(timezone=True), nullable=True))
     if bind.dialect.name != "sqlite":
         op.alter_column("users", "status", server_default=None)
+
+    # Drop old enum types on PostgreSQL
+    if is_postgres:
+        for enum_name in ("articleworkflowstate", "userrole"):
+            op.execute(
+                sa.text(
+                    f"DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_type WHERE typname = '{enum_name}') THEN DROP TYPE {enum_name}; END IF; END $$;"
+                )
+            )
 
     # Permissions and roles
     op.create_table(
