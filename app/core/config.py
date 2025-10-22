@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     search_provider: str = "meilisearch"
     search_url: str | None = None
     search_api_key: str | None = None
+    stripe_api_key: str | None = None
+    stripe_webhook_secret: str | None = None
 
     analytics_enabled: bool = True
     newsletter_webhook_url: str | None = None

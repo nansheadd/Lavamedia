@@ -14,13 +14,23 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 ALGORITHM = "HS256"
 
 
-def create_access_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
-    if expires_delta is None:
-        expires_delta = timedelta(minutes=settings.access_token_expire_minutes)
+def _create_token(subject: str | Any, expires_delta: timedelta) -> str:
     now = datetime.utcnow()
     expire = now + expires_delta
     to_encode = {"sub": str(subject), "exp": expire, "iat": now, "jti": uuid4().hex}
     return jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
+
+
+def create_access_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
+    if expires_delta is None:
+        expires_delta = timedelta(minutes=settings.access_token_expire_minutes)
+    return _create_token(subject, expires_delta)
+
+
+def create_refresh_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
+    if expires_delta is None:
+        expires_delta = timedelta(minutes=settings.refresh_token_expire_minutes)
+    return _create_token(subject, expires_delta)
 
 
 def verify_access_token(token: str) -> str | None:
@@ -29,6 +39,10 @@ def verify_access_token(token: str) -> str | None:
         return payload.get("sub")
     except JWTError:
         return None
+
+
+def verify_refresh_token(token: str) -> str | None:
+    return verify_access_token(token)
 
 
 def get_password_hash(password: str) -> str:

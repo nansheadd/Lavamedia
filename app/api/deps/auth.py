@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.security import verify_access_token
 from app.db.session import get_session
-from app.models.user import User
+from app.models.user import Role, User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -18,7 +18,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSe
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
 
-    stmt = select(User).options(selectinload(User.roles)).where(User.id == int(user_id))
+    stmt = (
+        select(User)
+        .options(selectinload(User.roles).selectinload(Role.permissions))
+        .where(User.id == int(user_id))
+    )
     result = await session.execute(stmt)
     user = result.scalar_one_or_none()
     if not user:

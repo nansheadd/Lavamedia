@@ -10,11 +10,13 @@ from app.api.deps.auth import get_current_user, require_roles
 from app.core.security import (
     create_access_token,
     create_mfa_secret,
+    create_refresh_token,
     generate_mfa_uri,
     get_password_hash,
     verify_access_token,
     verify_mfa_token,
     verify_password,
+    verify_refresh_token,
 )
 from app.models.user import Role, User
 from app.schemas.auth import (
@@ -56,12 +58,20 @@ async def signup(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     hashed_password = get_password_hash(user_in.password)
     mfa_secret = create_mfa_secret() if user_in.mfa_enabled else None
+    role_ids = user_in.role_ids or []
+    if not role_ids:
+        default_role = await auth_service.get_or_create_role(
+            "user", description="Compte lecteur Lavamedia"
+        )
+        role_ids = [default_role.id]
+
     user = await auth_service.create_user(
         email=user_in.email,
         hashed_password=hashed_password,
         full_name=user_in.full_name,
         status=user_in.status,
-        role_ids=user_in.role_ids or None,
+        role_ids=role_ids,
+        stripe_customer_id=user_in.stripe_customer_id,
     )
     user.mfa_secret = mfa_secret
     auth_service.session.add(user)
@@ -86,23 +96,36 @@ async def login(
         if not request.mfa_token or not verify_mfa_token(user.mfa_secret, request.mfa_token):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="MFA required")
     token = create_access_token(str(user.id))
+    refresh = create_refresh_token(str(user.id))
     await auth_service.record_login(user)
     await auth_service.session.commit()
-    return Token(access_token=token)
+    return Token(access_token=token, refresh_token=refresh)
 
 
 @router.post("/auth/refresh", response_model=Token)
-async def refresh_token(payload: RefreshRequest) -> Token:
-    user_id = verify_access_token(payload.refresh_token)
+async def refresh_token(
+    payload: RefreshRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> Token:
+    user_id = verify_refresh_token(payload.refresh_token)
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
-    token = create_access_token(user_id)
-    return Token(access_token=token)
+    user = await auth_service.get_user(int(user_id))
+    if not user or not user.is_active or user.status != "active":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User inactive")
+    access_token = create_access_token(user_id)
+    refresh_token_value = create_refresh_token(user_id)
+    return Token(access_token=access_token, refresh_token=refresh_token_value)
 
 
 @router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout() -> None:
     return None
+
+
+@router.get("/auth/me", response_model=UserRead)
+async def read_profile(current_user: User = Depends(get_current_user)) -> UserRead:
+    return _user_to_schema(current_user)
 
 
 @router.post("/auth/recover", status_code=status.HTTP_202_ACCEPTED)
@@ -165,6 +188,7 @@ async def create_user(
         full_name=payload.full_name,
         status=payload.status,
         role_ids=payload.role_ids or None,
+        stripe_customer_id=payload.stripe_customer_id,
     )
     user.mfa_secret = create_mfa_secret() if payload.mfa_enabled else None
     auth_service.session.add(user)
@@ -192,6 +216,7 @@ async def update_user(
         status=payload.status,
         is_active=payload.is_active,
         role_ids=payload.role_ids,
+        stripe_customer_id=payload.stripe_customer_id,
     )
     auth_service.session.add(user)
     await auth_service.session.commit()
