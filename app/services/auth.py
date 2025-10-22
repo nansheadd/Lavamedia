@@ -40,6 +40,7 @@ class AuthService:
         full_name: str | None = None,
         status: str = "active",
         role_ids: list[int] | None = None,
+        stripe_customer_id: str | None = None,
     ) -> User:
         roles = []
         if role_ids:
@@ -50,6 +51,7 @@ class AuthService:
             full_name=full_name,
             hashed_password=hashed_password,
             status=status,
+            stripe_customer_id=stripe_customer_id,
         )
         user.roles = roles
         self.session.add(user)
@@ -64,6 +66,7 @@ class AuthService:
         status: str | None = None,
         is_active: bool | None = None,
         role_ids: list[int] | None = None,
+        stripe_customer_id: str | None = None,
     ) -> User:
         if full_name is not None:
             user.full_name = full_name
@@ -75,9 +78,24 @@ class AuthService:
             stmt = select(Role).options(selectinload(Role.permissions)).where(Role.id.in_(role_ids))
             roles = list((await self.session.scalars(stmt)).all())
             user.roles = roles
+        if stripe_customer_id is not None:
+            user.stripe_customer_id = stripe_customer_id
         self.session.add(user)
         await self.session.flush()
         return user
+
+    async def get_role_by_name(self, name: str) -> Role | None:
+        stmt = select(Role).options(selectinload(Role.permissions)).where(Role.name == name)
+        return await self.session.scalar(stmt)
+
+    async def get_or_create_role(self, name: str, description: str | None = None) -> Role:
+        role = await self.get_role_by_name(name)
+        if role:
+            return role
+        role = Role(name=name, description=description)
+        self.session.add(role)
+        await self.session.flush()
+        return role
 
     async def delete_user(self, user: User) -> None:
         await self.session.delete(user)

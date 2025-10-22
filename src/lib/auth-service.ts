@@ -2,92 +2,186 @@
 
 const ACCESS_TOKEN_KEY = 'lavamedia.accessToken';
 const REFRESH_TOKEN_KEY = 'lavamedia.refreshToken';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? '/api').replace(/\/$/, '');
 
-export type Credentials = {
+type TokenResponse = {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+};
+
+type SignupResponse = {
+  user_id: number;
+  mfa_uri?: string | null;
+};
+
+export type SignupPayload = {
   email: string;
   password: string;
+  fullName?: string | null;
 };
 
-type JwtPayload = {
-  sub: string;
-  name: string;
+export type AuthenticatedUser = {
+  id: number;
   email: string;
-  role: 'journalist' | 'admin' | 'reader';
-  exp: number;
+  fullName: string | null;
+  roles: string[];
+  primaryRole: 'user' | 'journalist' | 'admin';
+  stripeCustomerId: string | null;
 };
 
-const mockUsers: Record<string, Omit<JwtPayload, 'exp'>> = {
-  'journaliste@lavamedia.fr': {
-    sub: '1',
-    name: 'Jeanne Journaliste',
-    email: 'journaliste@lavamedia.fr',
-    role: 'journalist'
-  },
-  'admin@lavamedia.fr': {
-    sub: '2',
-    name: 'Alex Admin',
-    email: 'admin@lavamedia.fr',
-    role: 'admin'
-  }
-};
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function createToken(payload: Omit<JwtPayload, 'exp'>, lifetime = 60 * 60): string {
-  const exp = Math.floor(Date.now() / 1000) + lifetime;
-  const tokenPayload: JwtPayload = { ...payload, exp };
-  return btoa(JSON.stringify(tokenPayload));
+function buildUrl(path: string) {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${cleanPath}`;
 }
 
-function decodeToken(token: string): JwtPayload | null {
+async function parseBody(response: Response) {
+  const text = await response.text();
+  if (!text) {
+    return undefined;
+  }
   try {
-    return JSON.parse(atob(token)) as JwtPayload;
-  } catch (error) {
-    console.error('Failed to decode token', error);
-    return null;
+    return JSON.parse(text);
+  } catch {
+    return text;
   }
 }
 
-export async function login(email: string, password: string) {
-  await wait(500);
-  if (!mockUsers[email] || password !== 'password') {
-    throw new Error('Identifiants invalides');
+async function handleResponse<T>(response: Response): Promise<T> {
+  const body = await parseBody(response);
+  if (!response.ok) {
+    let message = 'Une erreur est survenue. Veuillez réessayer.';
+    if (body) {
+      if (typeof body === 'string') {
+        message = body;
+      } else if (typeof body === 'object') {
+        const candidate = (body as Record<string, unknown>).detail ?? (body as Record<string, unknown>).message;
+        if (typeof candidate === 'string' && candidate.trim().length > 0) {
+          message = candidate;
+        }
+      }
+    }
+    throw new Error(message);
   }
-
-  const access = createToken(mockUsers[email], 60 * 15);
-  const refresh = createToken(mockUsers[email], 60 * 60 * 24 * 30);
-  localStorage.setItem(ACCESS_TOKEN_KEY, access);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+  return body as T;
 }
 
-export async function logout() {
-  await wait(200);
+function storeTokens(tokens: TokenResponse) {
+  localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
+  localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+}
+
+export function clearTokens() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
-export async function refreshToken() {
-  const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-  if (!refresh) return false;
-  const payload = decodeToken(refresh);
-  if (!payload || payload.exp * 1000 < Date.now()) {
-    await logout();
-    return false;
-  }
-  const access = createToken(payload, 60 * 15);
-  localStorage.setItem(ACCESS_TOKEN_KEY, access);
-  return true;
+export async function signup(payload: SignupPayload): Promise<SignupResponse> {
+  const response = await fetch(buildUrl('/auth/signup'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email: payload.email,
+      password: payload.password,
+      full_name: payload.fullName ?? null,
+      status: 'active',
+      role_ids: [],
+      mfa_enabled: false
+    })
+  });
+
+  return handleResponse<SignupResponse>(response);
 }
 
-export async function getProfile() {
-  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-  if (!token) throw new Error('Utilisateur non authentifié');
-  const payload = decodeToken(token);
-  if (!payload) throw new Error('Token invalide');
-  const { exp, sub, ...rest } = payload;
+export async function login(email: string, password: string) {
+  const response = await fetch(buildUrl('/auth/login'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email, password })
+  });
+
+  const tokens = await handleResponse<TokenResponse>(response);
+  storeTokens(tokens);
+}
+
+export async function logout() {
+  const accessToken = getAccessToken();
+  try {
+    if (accessToken) {
+      await fetch(buildUrl('/auth/logout'), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+    }
+  } finally {
+    clearTokens();
+  }
+}
+
+export async function refreshToken() {
+  const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
+  if (!refresh) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(buildUrl('/auth/refresh'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ refresh_token: refresh })
+    });
+
+    const tokens = await handleResponse<TokenResponse>(response);
+    storeTokens(tokens);
+    return true;
+  } catch (error) {
+    clearTokens();
+    console.warn('Impossible de rafraîchir le token', error);
+    return false;
+  }
+}
+
+export async function getProfile(): Promise<AuthenticatedUser> {
+  const accessToken = getAccessToken();
+  if (!accessToken) {
+    throw new Error('Utilisateur non authentifié');
+  }
+
+  const response = await fetch(buildUrl('/auth/me'), {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  const data = await handleResponse<{
+    id: number;
+    email: string;
+    full_name: string | null;
+    roles: Array<{ id: number; name: string }>;
+    stripe_customer_id: string | null;
+  }>(response);
+
+  const roles = data.roles?.map((role) => role.name) ?? [];
+  const priority: Array<'admin' | 'journalist' | 'user'> = ['admin', 'journalist', 'user'];
+  const primaryRole = (roles.find((role): role is 'admin' | 'journalist' | 'user' =>
+    priority.includes(role as 'admin' | 'journalist' | 'user')
+  ) ?? 'user');
+
   return {
-    id: sub,
-    ...rest
+    id: data.id,
+    email: data.email,
+    fullName: data.full_name,
+    roles,
+    primaryRole,
+    stripeCustomerId: data.stripe_customer_id
   };
 }
 

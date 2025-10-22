@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 const initialUsers = [
   { id: '1', name: 'Jeanne Journaliste', email: 'jeanne@lavamedia.fr', role: 'journalist' },
   { id: '2', name: 'Alex Admin', email: 'alex@lavamedia.fr', role: 'admin' },
-  { id: '3', name: 'Lina Lectrice', email: 'lina@lavamedia.fr', role: 'reader' }
+  { id: '3', name: 'Lina Lectrice', email: 'lina@lavamedia.fr', role: 'user' }
 ];
 
-type Role = 'reader' | 'journalist' | 'admin';
+type Role = 'user' | 'journalist' | 'admin';
 
 export function UsersManager() {
   const [users, setUsers] = useState(initialUsers);
@@ -19,7 +19,7 @@ export function UsersManager() {
     setUsers((current) =>
       current.map((user) => {
         if (user.id !== id) return user;
-        const roles: Role[] = ['reader', 'journalist', 'admin'];
+        const roles: Role[] = ['user', 'journalist', 'admin'];
         const nextIndex = (roles.indexOf(user.role as Role) + 1) % roles.length;
         return { ...user, role: roles[nextIndex] };
       })

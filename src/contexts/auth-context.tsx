@@ -1,20 +1,25 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { getProfile, login as apiLogin, logout as apiLogout, refreshToken } from '@/lib/auth-service';
+import {
+  type AuthenticatedUser,
+  type SignupPayload,
+  getProfile,
+  login as apiLogin,
+  logout as apiLogout,
+  refreshToken,
+  signup as apiSignup,
+  getAccessToken
+} from '@/lib/auth-service';
 
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: 'journalist' | 'admin' | 'reader';
-};
+export type AuthUser = AuthenticatedUser;
 
 type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  signup: (payload: SignupPayload) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -27,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const bootstrap = async () => {
       try {
         const refreshed = await refreshToken();
-        if (refreshed) {
+        if (refreshed || getAccessToken()) {
           const profile = await getProfile();
           setUser(profile);
         }
@@ -50,6 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await apiLogin(email, password);
         const profile = await getProfile();
         setUser(profile);
+      } catch (error) {
+        setUser(null);
+        throw error;
       } finally {
         setLoading(false);
       }
@@ -59,6 +67,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await apiLogout();
         setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    },
+    signup: async (payload: SignupPayload) => {
+      setLoading(true);
+      try {
+        await apiSignup(payload);
+        await apiLogin(payload.email, payload.password);
+        const profile = await getProfile();
+        setUser(profile);
+      } catch (error) {
+        setUser(null);
+        throw error;
       } finally {
         setLoading(false);
       }

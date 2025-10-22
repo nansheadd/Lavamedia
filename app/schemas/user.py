@@ -44,6 +44,7 @@ class UserBase(StrictBaseModel):
     full_name: str | None = None
     status: str = "active"
     role_ids: list[int] = []
+    stripe_customer_id: str | None = None
 
 
 class UserCreate(UserBase):
@@ -56,6 +57,7 @@ class UserUpdate(StrictBaseModel):
     status: str | None = None
     is_active: bool | None = None
     role_ids: list[int] | None = None
+    stripe_customer_id: str | None = None
 
 
 class UserRead(ORMBaseModel):
@@ -68,6 +70,7 @@ class UserRead(ORMBaseModel):
     created_at: datetime
     updated_at: datetime
     last_login_at: datetime | None = None
+    stripe_customer_id: str | None = None
     roles: list[RoleRead] = []
     mfa_enabled: bool
 
