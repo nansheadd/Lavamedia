@@ -68,7 +68,7 @@ export default function LoginPage() {
         </form>
         <p className="mt-6 text-sm text-slate-600 dark:text-slate-300">
           Pas encore de compte ?{' '}
-          <Link href="/auth/signup" className="font-semibold text-primary-600 hover:underline">
+          <Link href="/signup" className="font-semibold text-primary-600 hover:underline">
             Créez votre accès
           </Link>
         </p>
