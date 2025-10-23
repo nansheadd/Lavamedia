@@ -26,7 +26,7 @@ export function MainNav() {
       : user.primaryRole === 'journalist'
         ? '/journalist'
         : '/espace'
-    : '/auth/login';
+    : '/login';
 
   return (
     <Disclosure as="header" className="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
@@ -70,10 +70,10 @@ export function MainNav() {
               ) : (
                 <>
                   <Button asChild variant="ghost">
-                    <Link href="/auth/login">Se connecter</Link>
+                    <Link href="/login">Se connecter</Link>
                   </Button>
                   <Button asChild>
-                    <Link href="/auth/signup">Créer un compte</Link>
+                    <Link href="/signup">Créer un compte</Link>
                   </Button>
                 </>
               )}
@@ -122,13 +122,13 @@ export function MainNav() {
               ) : (
                 <div className="space-y-3">
                   <Link
-                    href="/auth/login"
+                    href="/login"
                     className="block rounded-xl border border-slate-300 px-3 py-2 text-center text-sm font-semibold text-slate-700 transition hover:border-primary-500 hover:text-primary-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-primary-400"
                   >
                     Se connecter
                   </Link>
                   <Link
-                    href="/auth/signup"
+                    href="/signup"
                     className="block rounded-xl bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow transition hover:bg-primary-700"
                   >
                     Créer un compte

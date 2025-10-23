@@ -15,7 +15,7 @@ export default function PrivateSpacePage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/auth/login');
+      router.replace('/login');
     }
   }, [loading, user, router]);
 
