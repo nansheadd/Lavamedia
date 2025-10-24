@@ -77,7 +77,7 @@ export function clearTokens() {
 }
 
 export async function signup(payload: SignupPayload): Promise<SignupResponse> {
-  const response = await fetch(buildUrl('/auth/signup'), {
+  const response = await fetch(buildUrl('/api/auth/signup'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
