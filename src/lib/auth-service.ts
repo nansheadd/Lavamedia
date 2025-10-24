@@ -96,7 +96,7 @@ export async function signup(payload: SignupPayload): Promise<SignupResponse> {
 }
 
 export async function login(email: string, password: string) {
-  const response = await fetch(buildUrl('/auth/login'), {
+  const response = await fetch(buildUrl('/api/auth/login'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -112,7 +112,7 @@ export async function logout() {
   const accessToken = getAccessToken();
   try {
     if (accessToken) {
-      await fetch(buildUrl('/auth/logout'), {
+      await fetch(buildUrl('/api/auth/logout'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`
@@ -131,7 +131,7 @@ export async function refreshToken() {
   }
 
   try {
-    const response = await fetch(buildUrl('/auth/refresh'), {
+    const response = await fetch(buildUrl('/api/auth/refresh'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -155,7 +155,7 @@ export async function getProfile(): Promise<AuthenticatedUser> {
     throw new Error('Utilisateur non authentifié');
   }
 
-  const response = await fetch(buildUrl('/auth/me'), {
+  const response = await fetch(buildUrl('/api/auth/me'), {
     headers: {
       Authorization: `Bearer ${accessToken}`
     }
