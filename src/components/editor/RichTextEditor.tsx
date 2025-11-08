@@ -241,7 +241,7 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
       )}
       <div className="flex flex-col gap-0 lg:grid lg:editor-grid">
         <div className="space-y-8 divide-y divide-slate-100">
-          <section className="editor-section space-y-5" aria-label="Composition de l'article">
+          <section className="editor-section space-y-5" aria-label="Composition de l’article">
             <div className="grid gap-4">
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-600">
                 Titre
@@ -274,7 +274,7 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
                 />
               </label>
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-600">
-                Corps de l'article
+                Corps de l’article
                 <textarea
                   value={state.body}
                   onChange={(event) =>
@@ -320,7 +320,7 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
                   <input
                     value={changeComment}
                     onChange={(event) => setChangeComment(event.target.value)}
-                    placeholder="Contexte pour l'équipe éditoriale"
+                    placeholder="Contexte pour l’équipe éditoriale"
                     className="editor-input"
                   />
                 </label>

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { FC } from 'react';
 
 import type { EditorState } from './types';
@@ -31,11 +32,15 @@ export const LivePreview: FC<LivePreviewProps> = ({ state }) => {
       </header>
       {state.lead && (
         <figure className="overflow-hidden rounded-3xl border border-slate-200 shadow-sm">
-          <img
-            src={state.lead.imageUrl}
-            alt={state.lead.caption}
-            className="h-72 w-full object-cover"
-          />
+          <div className="relative h-72 w-full">
+            <Image
+              src={state.lead.imageUrl}
+              alt={state.lead.caption || 'Illustration de l’article'}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
           {(state.lead.caption || state.lead.credit) && (
             <figcaption className="flex items-center justify-between bg-slate-50 px-6 py-3 text-sm text-slate-600">
               <span>{state.lead.caption}</span>
@@ -46,7 +51,7 @@ export const LivePreview: FC<LivePreviewProps> = ({ state }) => {
       )}
       <article className="editor-preview space-y-6">
         {paragraphs.length === 0 ? (
-          <p className="text-slate-500">Commencez à écrire pour afficher l'aperçu.</p>
+          <p className="text-slate-500">Commencez à écrire pour afficher l&apos;aperçu.</p>
         ) : (
           paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)
         )}
