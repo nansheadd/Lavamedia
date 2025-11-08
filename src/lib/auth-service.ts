@@ -2,7 +2,9 @@
 
 const ACCESS_TOKEN_KEY = 'lavamedia.accessToken';
 const REFRESH_TOKEN_KEY = 'lavamedia.refreshToken';
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? '/api').replace(/\/$/, '');
+
+const DEFAULT_API_BASE = process.env.NODE_ENV === 'development' ? 'http://localhost:8000/api' : '/api';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE).replace(/\/$/, '');
 
 type TokenResponse = {
   access_token: string;
