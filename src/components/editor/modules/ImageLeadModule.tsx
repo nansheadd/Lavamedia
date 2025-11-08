@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { ChangeEvent, FC } from 'react';
 
 import type { EditorLead } from '../types';
@@ -28,13 +29,13 @@ export const ImageLeadModule: FC<ImageLeadModuleProps> = ({ lead, onChange }) =>
       <header className="space-y-2">
         <p className="editor-label">Image &amp; chapeau</p>
         <p className="text-sm text-slate-500">
-          Harmonisez visuel et chapô pour renforcer l'entrée en matière de l'article.
+          Harmonisez visuel et chapô pour renforcer l’entrée en matière de l’article.
         </p>
       </header>
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-4">
           <label className="flex flex-col gap-2 text-sm font-medium text-slate-600">
-            URL de l'image
+            URL de l’image
             <input
               name="imageUrl"
               value={currentLead.imageUrl}
@@ -66,14 +67,18 @@ export const ImageLeadModule: FC<ImageLeadModuleProps> = ({ lead, onChange }) =>
         <div className="rounded-3xl border border-dashed border-slate-200 p-6 text-sm text-slate-500">
           <p className="font-semibold text-slate-600">Prévisualisation</p>
           {currentLead.imageUrl ? (
-            <img
-              src={currentLead.imageUrl}
-              alt={currentLead.caption || 'Illustration'}
-              className="mt-4 h-48 w-full rounded-2xl object-cover"
-            />
+            <div className="relative mt-4 h-48 w-full overflow-hidden rounded-2xl">
+              <Image
+                src={currentLead.imageUrl}
+                alt={currentLead.caption || 'Illustration'}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
           ) : (
             <p className="mt-4 text-xs">
-              Ajoutez une URL d'image valide pour afficher un aperçu. Les images sont chargées côté client.
+              Ajoutez une URL d’image valide pour afficher un aperçu. Les images sont chargées côté client.
             </p>
           )}
           {(currentLead.caption || currentLead.credit) && (

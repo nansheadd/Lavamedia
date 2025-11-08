@@ -44,7 +44,7 @@ export const TrackChangesPanel: FC<TrackChangesPanelProps> = ({ changes, enabled
       <div className="editor-timeline space-y-6 overflow-y-auto">
         {changes.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
-            Aucune modification enregistrée pour l'instant.
+            Aucune modification enregistrée pour l’instant.
           </p>
         ) : (
           changes.map((change) => (
