@@ -19,6 +19,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
 from app.db.types import JSONType
+from app.utils.datetime import utcnow
 
 if TYPE_CHECKING:  # pragma: no cover - only used for type checking
     from app.models.media import MediaAsset
@@ -62,9 +63,9 @@ class ContentItem(Base):
     workflow_state: Mapped[ContentWorkflowState] = mapped_column(
         Enum(ContentWorkflowState), default=ContentWorkflowState.draft, nullable=False
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
 
     versions: Mapped[list["ContentVersion"]] = relationship(
@@ -96,7 +97,7 @@ class ContentVersion(Base):
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     diff: Mapped[dict | None] = mapped_column(JSONType, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     content: Mapped[ContentItem] = relationship(back_populates="versions")
     change_requests: Mapped[list["ContentChangeRequest"]] = relationship(
@@ -164,7 +165,7 @@ class ContentChangeRequest(Base):
     proposed_changes: Mapped[dict] = mapped_column(JSONType, nullable=False)
     decision_notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=utcnow, nullable=False
     )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

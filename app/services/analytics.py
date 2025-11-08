@@ -9,6 +9,7 @@ from fastapi import Depends
 
 from app.db.session import get_session
 from app.models.analytics import AnalyticsEvent, Dashboard
+from app.utils.datetime import utcnow
 
 
 class AnalyticsService:
@@ -29,7 +30,7 @@ class AnalyticsService:
             session_id=session_id,
             event_type=event_type,
             payload=payload,
-            occurred_at=occurred_at or datetime.utcnow(),
+            occurred_at=occurred_at or utcnow(),
         )
         self.session.add(event)
         await self.session.flush()

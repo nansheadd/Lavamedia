@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -18,6 +17,7 @@ from app.models.content import (
     ContentWorkflowState,
 )
 from app.services.content import ContentService
+from app.utils.datetime import utcnow
 
 
 class EditorialWorkflowService:
@@ -85,7 +85,7 @@ class EditorialWorkflowService:
         if not content:
             raise LookupError("Content not found")
         change.status = status
-        change.resolved_at = datetime.utcnow()
+        change.resolved_at = utcnow()
         change.resolved_by_id = resolver_id
         change.decision_notes = notes
         if status is ContentChangeRequestStatus.approved:

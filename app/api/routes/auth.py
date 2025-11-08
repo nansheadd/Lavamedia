@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -36,6 +36,7 @@ from app.schemas.user import (
     UserUpdate,
 )
 from app.services.auth import AuthService, get_auth_service
+from app.utils.datetime import utcnow
 
 router = APIRouter(tags=["auth"])
 
@@ -149,7 +150,7 @@ async def request_password_recovery(
     user = await auth_service.get_user_by_email(payload.email)
     if user:
         user.reset_token = secrets.token_urlsafe(32)
-        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        user.reset_token_expires = utcnow() + timedelta(hours=1)
         auth_service.session.add(user)
         await auth_service.session.commit()
     return {"message": "If the email exists, recovery instructions were sent."}
@@ -161,7 +162,8 @@ async def reset_password(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> dict:
     user = await auth_service.session.scalar(select(User).where(User.reset_token == payload.token))
-    if not user or not user.reset_token_expires or user.reset_token_expires < datetime.utcnow():
+    current_time = utcnow()
+    if not user or not user.reset_token_expires or user.reset_token_expires < current_time:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
     user.hashed_password = get_password_hash(payload.new_password)
     user.reset_token = None

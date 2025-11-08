@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -16,6 +14,7 @@ from app.models.content import (
     ContentVersion,
     ContentWorkflowState,
 )
+from app.utils.datetime import utcnow
 
 
 class ContentService:
@@ -106,7 +105,7 @@ class ContentService:
             item.workflow_state = workflow_state
         if updated_by is not None:
             item.updated_by = updated_by
-        item.updated_at = datetime.utcnow()
+        item.updated_at = utcnow()
 
         if category_ids is not None:
             categories = list(
@@ -137,7 +136,7 @@ class ContentService:
     async def publish_content(self, item: ContentItem, *, published_by: int | None = None) -> ContentItem:
         item.status = "published"
         item.workflow_state = ContentWorkflowState.published
-        item.published_at = datetime.utcnow()
+        item.published_at = utcnow()
         item.updated_by = published_by
         self.session.add(item)
         await self.session.flush()
