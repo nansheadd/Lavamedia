@@ -32,6 +32,15 @@ export type AuthenticatedUser = {
 
 function buildUrl(path: string) {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+  if (!API_BASE_URL) {
+    return cleanPath;
+  }
+
+  if (cleanPath.startsWith('/api') && API_BASE_URL.endsWith('/api')) {
+    return `${API_BASE_URL}${cleanPath.slice(4)}`;
+  }
+
   return `${API_BASE_URL}${cleanPath}`;
 }
 
