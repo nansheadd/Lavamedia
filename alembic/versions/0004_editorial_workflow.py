@@ -1,7 +1,7 @@
-"""editorial workflow
+"""Add tables to support the editorial workflow.
 
-Revision ID: 0004_editorial_workflow
-Revises: 0003_user_roles_and_stripe
+Revision ID: 0004
+Revises: 0003
 Create Date: 2024-06-08 00:00:00.000000
 """
 
@@ -13,8 +13,8 @@ from alembic import op
 from app.models.content import ContentChangeRequestStatus
 
 # revision identifiers, used by Alembic.
-revision: str = '0004_editorial_workflow'
-down_revision: str = '0003_user_roles_and_stripe'
+revision: str = "0004"
+down_revision: str = "0003"
 branch_labels: Sequence[str] | None = None
 depends_on: Sequence[str] | None = None
 
