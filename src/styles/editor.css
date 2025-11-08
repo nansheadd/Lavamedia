@@ -33,7 +33,62 @@
   }
 
   .editor-preview {
-    @apply prose prose-slate max-w-none dark:prose-invert;
+    @apply max-w-none space-y-6 text-base leading-7 text-slate-700 dark:text-slate-200;
+  }
+
+  .editor-preview h1 {
+    @apply text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-50;
+  }
+
+  .editor-preview h2 {
+    @apply text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100;
+  }
+
+  .editor-preview h3 {
+    @apply text-2xl font-semibold text-slate-900 dark:text-slate-100;
+  }
+
+  .editor-preview h4 {
+    @apply text-xl font-semibold text-slate-900 dark:text-slate-100;
+  }
+
+  .editor-preview p,
+  .editor-preview ul,
+  .editor-preview ol {
+    @apply text-base leading-7 text-slate-700 dark:text-slate-200;
+  }
+
+  .editor-preview a {
+    @apply font-medium text-primary-600 underline decoration-primary-200 underline-offset-4 hover:text-primary-500 dark:text-pri
+mary-300 dark:hover:text-primary-200;
+  }
+
+  .editor-preview strong {
+    @apply font-semibold text-slate-900 dark:text-slate-100;
+  }
+
+  .editor-preview code {
+    @apply rounded-md bg-slate-100 px-2 py-1 font-mono text-sm text-slate-900 dark:bg-slate-800/80 dark:text-slate-100;
+  }
+
+  .editor-preview pre {
+    @apply overflow-x-auto rounded-2xl bg-slate-900/90 p-4 text-sm text-slate-100 shadow-inner;
+  }
+
+  .editor-preview blockquote {
+    @apply border-l-4 border-primary-200 pl-4 italic text-slate-800 dark:border-primary-400 dark:text-slate-100;
+  }
+
+  .editor-preview ul {
+    @apply list-disc space-y-2 pl-6;
+  }
+
+  .editor-preview ol {
+    @apply list-decimal space-y-2 pl-6;
+  }
+
+  .editor-preview hr {
+    @apply border-0 border-t border-slate-200 dark:border-slate-700;
   }
 
   .editor-change {
