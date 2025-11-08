@@ -41,6 +41,12 @@ class ContentWorkflowState(str, enum.Enum):
     archived = "archived"
 
 
+class ContentChangeRequestStatus(str, enum.Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
+
+
 class ContentItem(Base):
     __tablename__ = "content_items"
     __table_args__ = (UniqueConstraint("slug", name="uq_content_items_slug"),)
@@ -70,6 +76,11 @@ class ContentItem(Base):
     media_links: Mapped[list["ContentMedia"]] = relationship(
         back_populates="content", cascade="all, delete-orphan"
     )
+    change_requests: Mapped[list["ContentChangeRequest"]] = relationship(
+        back_populates="content",
+        cascade="all, delete-orphan",
+        order_by="ContentChangeRequest.created_at",
+    )
 
 
 class ContentVersion(Base):
@@ -88,6 +99,10 @@ class ContentVersion(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
     content: Mapped[ContentItem] = relationship(back_populates="versions")
+    change_requests: Mapped[list["ContentChangeRequest"]] = relationship(
+        back_populates="base_version",
+        cascade="all, delete-orphan",
+    )
 
 
 class ContentCategory(Base):
@@ -121,3 +136,43 @@ class ContentMedia(Base):
 
     content: Mapped[ContentItem] = relationship(back_populates="media_links")
     media: Mapped["MediaAsset"] = relationship(back_populates="content_links")
+
+
+class ContentChangeRequest(Base):
+    __tablename__ = "content_change_requests"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    content_id: Mapped[int] = mapped_column(
+        ForeignKey("content_items.id", ondelete="CASCADE"), nullable=False
+    )
+    base_version_id: Mapped[int] = mapped_column(
+        ForeignKey("content_versions.id", ondelete="CASCADE"), nullable=False
+    )
+    proposed_by_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    resolved_by_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[ContentChangeRequestStatus] = mapped_column(
+        Enum(ContentChangeRequestStatus),
+        default=ContentChangeRequestStatus.pending,
+        nullable=False,
+    )
+    summary: Mapped[str] = mapped_column(String(255), nullable=False)
+    comment: Mapped[str | None] = mapped_column(Text)
+    proposed_changes: Mapped[dict] = mapped_column(JSONType, nullable=False)
+    decision_notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    content: Mapped[ContentItem] = relationship(back_populates="change_requests")
+    base_version: Mapped[ContentVersion] = relationship(back_populates="change_requests")
+    proposed_by: Mapped[Optional["User"]] = relationship(
+        "User", foreign_keys=[proposed_by_id]
+    )
+    resolved_by: Mapped[Optional["User"]] = relationship(
+        "User", foreign_keys=[resolved_by_id]
+    )

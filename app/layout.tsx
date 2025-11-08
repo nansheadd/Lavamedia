@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import clsx from 'clsx';
 import './globals.css';
+import '@/styles/editor.css';
 import { Providers } from '@/contexts/Providers';
 import { MainNav } from '@/components/navigation/MainNav';
 import { Footer } from '@/components/navigation/Footer';
