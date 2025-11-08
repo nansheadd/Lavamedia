@@ -18,7 +18,7 @@ export function ArticleCard({ slug, title, category, excerpt, publishedAt }: Art
       <Badge>{category}</Badge>
       <CardTitle className="mt-4 text-2xl">
         <Link
-          href={{ pathname: '/article/[slug]', query: { slug } }}
+          href={`/article/${slug}`}
           className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         >
           {title}
@@ -27,7 +27,7 @@ export function ArticleCard({ slug, title, category, excerpt, publishedAt }: Art
       <CardDescription>{excerpt}</CardDescription>
       <CardFooter>
         <time dateTime={publishedAt}>{format(new Date(publishedAt), 'd MMMM yyyy', { locale: fr })}</time>
-        <Link className="text-primary-600 hover:underline" href={{ pathname: '/article/[slug]', query: { slug } }}>
+        <Link className="text-primary-600 hover:underline" href={`/article/${slug}`}>
           Lire l’article
         </Link>
       </CardFooter>
