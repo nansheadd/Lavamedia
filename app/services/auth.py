@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -10,6 +8,7 @@ from fastapi import Depends
 
 from app.db.session import get_session
 from app.models.user import Permission, Role, User
+from app.utils.datetime import utcnow
 
 
 class AuthService:
@@ -102,7 +101,7 @@ class AuthService:
         await self.session.flush()
 
     async def record_login(self, user: User) -> None:
-        user.last_login_at = datetime.utcnow()
+        user.last_login_at = utcnow()
         self.session.add(user)
         await self.session.flush()
 
