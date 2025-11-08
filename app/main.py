@@ -23,6 +23,7 @@ from app.middleware.metrics import MetricsMiddleware
 from app.middleware.observability import RequestLoggingMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.db.migrations import run_migrations
 
 setup_logging()
 
@@ -60,6 +61,11 @@ app.add_middleware(
 )
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
+
+
+@app.on_event("startup")
+async def apply_migrations() -> None:
+    await run_migrations()
 
 
 @app.get("/health", tags=["system"])
