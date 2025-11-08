@@ -24,6 +24,7 @@ from app.middleware.observability import RequestLoggingMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.db.migrations import run_migrations
+from app.db.seed import ensure_seed_data
 
 setup_logging()
 
@@ -64,8 +65,9 @@ app.add_middleware(RequestLoggingMiddleware)
 
 
 @app.on_event("startup")
-async def apply_migrations() -> None:
+async def run_startup_tasks() -> None:
     await run_migrations()
+    await ensure_seed_data()
 
 
 @app.get("/health", tags=["system"])
