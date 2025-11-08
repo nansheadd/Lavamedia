@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -119,14 +119,17 @@ class ContentService:
                 for media_id, role in media_links
             ]
         if new_body is not None:
-            version_number = (item.versions[-1].version_number + 1) if item.versions else 1
+            latest_number = await self.session.scalar(
+                select(func.max(ContentVersion.version_number)).where(ContentVersion.content_id == item.id)
+            )
+            version_number = (latest_number or 0) + 1
             version = ContentVersion(
-                content=item,
+                content_id=item.id,
                 version_number=version_number,
                 body=new_body,
                 diff=diff,
             )
-            item.versions.append(version)
+            self.session.add(version)
         self.session.add(item)
         await self.session.flush()
         return item

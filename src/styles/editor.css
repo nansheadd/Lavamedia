@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .editor-shell {
+    @apply editor-card relative isolate overflow-hidden;
+  }
+
+  .editor-shell::after {
+    @apply pointer-events-none absolute inset-0 bg-gradient-to-br from-editor-background/40 via-transparent to-primary-100/30 opacity-0 transition-opacity duration-500 ease-out;
+    content: '';
+  }
+
+  .editor-shell:focus-within::after {
+    @apply opacity-100;
+  }
+
+  .editor-section {
+    @apply space-y-6 px-6 py-8;
+  }
+
+  .editor-label {
+    @apply text-sm font-semibold uppercase tracking-wide text-editor-muted;
+  }
+
+  .editor-input {
+    @apply w-full rounded-2xl border border-editor-subtle bg-white px-5 py-4 text-base text-slate-900 shadow-sm transition focus:border-primary-400 focus:ring-4 focus:ring-primary-200/60 dark:bg-slate-900 dark:text-slate-100;
+  }
+
+  .editor-textarea {
+    @apply editor-input min-h-[12rem] resize-y leading-7;
+  }
+
+  .editor-preview {
+    @apply prose prose-slate max-w-none dark:prose-invert;
+  }
+
+  .editor-change {
+    @apply flex flex-col gap-2 rounded-2xl border border-editor-subtle/70 bg-editor-background/70 p-4 transition hover:border-primary-300 hover:bg-white;
+  }
+
+  .editor-callout {
+    @apply relative rounded-2xl border border-primary-200/70 bg-primary-50/70 px-5 py-4 text-sm leading-6 text-primary-800 shadow-sm;
+  }
+
+  .editor-callout[data-tone='warning'] {
+    @apply border-editor-warning/70 bg-orange-50/80 text-orange-800;
+  }
+
+  .editor-callout[data-tone='success'] {
+    @apply border-editor-success/70 bg-emerald-50/80 text-emerald-800;
+  }
+
+  .editor-footnotes {
+    @apply space-y-3 rounded-2xl border border-editor-subtle bg-slate-50/80 p-5 text-sm text-slate-700 shadow-inner;
+  }
+}
+
+@layer utilities {
+  .editor-timeline {
+    @apply relative pl-5;
+  }
+
+  .editor-timeline::before {
+    @apply absolute left-1 top-1 bottom-1 w-px bg-gradient-to-b from-primary-200 via-primary-300 to-primary-200 content-[''];
+  }
+
+  .editor-timeline-item {
+    @apply relative pl-5;
+  }
+
+  .editor-timeline-item::before {
+    @apply absolute left-[-1.05rem] top-2 h-2.5 w-2.5 rounded-full border border-white bg-primary-500 shadow ring-4 ring-primary-200/60 content-[''];
+  }
+}
