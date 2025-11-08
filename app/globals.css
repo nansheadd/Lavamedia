@@ -21,3 +21,246 @@ textarea:focus-visible,
 select:focus-visible {
   @apply outline-none ring-2 ring-primary-500 ring-offset-2;
 }
+
+@layer components {
+  .prose {
+    --tw-prose-body: theme('colors.slate.700');
+    --tw-prose-headings: theme('colors.slate.900');
+    --tw-prose-links: theme('colors.primary.600');
+    --tw-prose-bold: theme('colors.slate.900');
+    --tw-prose-counters: theme('colors.slate.500');
+    --tw-prose-bullets: theme('colors.slate.400');
+    --tw-prose-hr: theme('colors.slate.200');
+    --tw-prose-quotes: theme('colors.slate.900');
+    --tw-prose-quote-borders: theme('colors.slate.200');
+    --tw-prose-captions: theme('colors.slate.500');
+    --tw-prose-code: theme('colors.slate.800');
+    --tw-prose-code-bg: theme('colors.slate.100');
+    --tw-prose-pre-bg: theme('colors.slate.950');
+    --tw-prose-pre-code: theme('colors.slate.100');
+    --tw-prose-pre-border: theme('colors.slate.800');
+    --tw-prose-th-borders: theme('colors.slate.300');
+    --tw-prose-td-borders: theme('colors.slate.200');
+    color: var(--tw-prose-body);
+    max-width: 65ch;
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  .prose :where(p, ul, ol, pre, table, blockquote, figure) {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+  }
+
+  .prose :where(:first-child) {
+    margin-top: 0;
+  }
+
+  .prose :where(:last-child) {
+    margin-bottom: 0;
+  }
+
+  .prose :where(h1, h2, h3, h4) {
+    color: var(--tw-prose-headings);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .prose :where(h1) {
+    font-size: 2.25rem;
+    margin-top: 0;
+    margin-bottom: 0.666em;
+  }
+
+  .prose :where(h2) {
+    font-size: 1.875rem;
+    margin-top: 1.6em;
+    margin-bottom: 0.8em;
+  }
+
+  .prose :where(h3) {
+    font-size: 1.5rem;
+    margin-top: 1.6em;
+    margin-bottom: 0.6em;
+  }
+
+  .prose :where(h4) {
+    font-size: 1.25rem;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose :where(a) {
+    color: var(--tw-prose-links);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--tw-prose-links);
+    transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  }
+
+  .prose :where(a:hover) {
+    color: var(--tw-prose-headings);
+    text-decoration-color: var(--tw-prose-headings);
+  }
+
+  .prose :where(p, li) {
+    color: var(--tw-prose-body);
+  }
+
+  .prose :where(strong) {
+    color: var(--tw-prose-bold);
+    font-weight: 600;
+  }
+
+  .prose :where(code) {
+    color: var(--tw-prose-code);
+    background-color: var(--tw-prose-code-bg);
+    border-radius: 0.375rem;
+    padding: 0.125em 0.375em;
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+
+  .prose :where(pre) {
+    background-color: var(--tw-prose-pre-bg);
+    border: 1px solid var(--tw-prose-pre-border);
+    border-radius: 0.75rem;
+    color: var(--tw-prose-pre-code);
+    font-size: 0.9em;
+    line-height: 1.7;
+    overflow-x: auto;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .prose :where(pre code) {
+    background: none;
+    border-radius: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .prose :where(ul) {
+    list-style-type: disc;
+    padding-left: 1.625rem;
+  }
+
+  .prose :where(ol) {
+    list-style-type: decimal;
+    padding-left: 1.625rem;
+  }
+
+  .prose :where(ul > li)::marker {
+    color: var(--tw-prose-bullets);
+  }
+
+  .prose :where(ol > li)::marker {
+    color: var(--tw-prose-counters);
+  }
+
+  .prose :where(blockquote) {
+    color: var(--tw-prose-quotes);
+    font-style: italic;
+    font-weight: 500;
+    border-left: 0.25rem solid var(--tw-prose-quote-borders);
+    padding-left: 1.25rem;
+  }
+
+  .prose :where(hr) {
+    border-color: var(--tw-prose-hr);
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+  }
+
+  .prose :where(table) {
+    width: 100%;
+    table-layout: auto;
+    text-align: left;
+    font-size: 0.95em;
+    line-height: 1.6;
+  }
+
+  .prose :where(thead th) {
+    color: var(--tw-prose-headings);
+    font-weight: 600;
+    border-bottom: 1px solid var(--tw-prose-th-borders);
+    padding-bottom: 0.75em;
+  }
+
+  .prose :where(tbody td) {
+    border-bottom: 1px solid var(--tw-prose-td-borders);
+    padding: 0.75em 0;
+  }
+
+  .prose :where(figure) {
+    display: table;
+  }
+
+  .prose :where(figcaption) {
+    color: var(--tw-prose-captions);
+    font-size: 0.9em;
+    margin-top: 0.75em;
+    text-align: center;
+  }
+
+  .prose :where(img, video) {
+    border-radius: 1rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .prose :where(li > :not([hidden]) ~ :not([hidden])) {
+    margin-top: 0.75em;
+  }
+
+  .prose :where(.not-prose, .not-prose *) {
+    color: inherit;
+    margin: 0;
+    font: inherit;
+    text-decoration: inherit;
+  }
+
+  .prose :where(.not-prose) {
+    max-width: none;
+  }
+
+  .prose-slate {
+    --tw-prose-body: theme('colors.slate.700');
+    --tw-prose-headings: theme('colors.slate.900');
+    --tw-prose-links: theme('colors.primary.600');
+    --tw-prose-bold: theme('colors.slate.900');
+    --tw-prose-counters: theme('colors.slate.500');
+    --tw-prose-bullets: theme('colors.slate.400');
+    --tw-prose-hr: theme('colors.slate.200');
+    --tw-prose-quotes: theme('colors.slate.900');
+    --tw-prose-quote-borders: theme('colors.slate.200');
+    --tw-prose-captions: theme('colors.slate.500');
+    --tw-prose-code: theme('colors.slate.800');
+    --tw-prose-code-bg: theme('colors.slate.100');
+    --tw-prose-pre-bg: theme('colors.slate.950');
+    --tw-prose-pre-code: theme('colors.slate.100');
+    --tw-prose-pre-border: theme('colors.slate.800');
+    --tw-prose-th-borders: theme('colors.slate.300');
+    --tw-prose-td-borders: theme('colors.slate.200');
+  }
+
+  .prose-invert {
+    --tw-prose-body: theme('colors.slate.300');
+    --tw-prose-headings: theme('colors.slate.100');
+    --tw-prose-links: theme('colors.primary.300');
+    --tw-prose-bold: theme('colors.slate.100');
+    --tw-prose-counters: theme('colors.slate.400');
+    --tw-prose-bullets: theme('colors.slate.600');
+    --tw-prose-hr: theme('colors.slate.700');
+    --tw-prose-quotes: theme('colors.slate.100');
+    --tw-prose-quote-borders: theme('colors.slate.700');
+    --tw-prose-captions: theme('colors.slate.400');
+    --tw-prose-code: theme('colors.slate.200');
+    --tw-prose-code-bg: theme('colors.slate.800');
+    --tw-prose-pre-bg: theme('colors.slate.900');
+    --tw-prose-pre-code: theme('colors.slate.200');
+    --tw-prose-pre-border: theme('colors.slate.700');
+    --tw-prose-th-borders: theme('colors.slate.700');
+    --tw-prose-td-borders: theme('colors.slate.800');
+  }
+}
