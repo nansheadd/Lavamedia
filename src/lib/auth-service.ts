@@ -50,16 +50,23 @@ async function parseBody(response: Response) {
 async function handleResponse<T>(response: Response): Promise<T> {
   const body = await parseBody(response);
   if (!response.ok) {
-    let message = 'Une erreur est survenue. Veuillez réessayer.';
+    let message = response.statusText?.trim() || 'Une erreur est survenue. Veuillez réessayer.';
     if (body) {
       if (typeof body === 'string') {
-        message = body;
+        const trimmed = body.trim();
+        const looksLikeHtml = /^<!doctype html>/i.test(trimmed) || /^<html[\s>]/i.test(trimmed);
+        if (!looksLikeHtml && trimmed.length > 0) {
+          message = trimmed;
+        }
       } else if (typeof body === 'object') {
         const candidate = (body as Record<string, unknown>).detail ?? (body as Record<string, unknown>).message;
         if (typeof candidate === 'string' && candidate.trim().length > 0) {
           message = candidate;
         }
       }
+    }
+    if (response.status === 404 && message === response.statusText) {
+      message = 'Service indisponible. Vérifiez votre configuration serveur et réessayez.';
     }
     throw new Error(message);
   }
