@@ -91,3 +91,38 @@ export async function exportPdf(contentId: number): Promise<Blob> {
   }
   return await response.blob();
 }
+
+export type ImportDocxResponse = {
+  title: string;
+  chapeau: string;
+  body: string;
+};
+
+export async function importDocxDraft(file: File): Promise<ImportDocxResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await fetch(`${baseUrl}/content/import/docx`, {
+    method: 'POST',
+    headers: buildAuthHeaders(),
+    body: formData
+  });
+  return handleResponse<ImportDocxResponse>(response);
+}
+
+export type TranslationResponse = {
+  title: string;
+  chapeau: string;
+  body: string;
+};
+
+export async function requestTranslation(
+  contentId: number,
+  targetLanguage: 'fr' | 'nl'
+): Promise<TranslationResponse> {
+  const response = await fetch(`${baseUrl}/content/${contentId}/translate`, {
+    method: 'POST',
+    headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ target_language: targetLanguage })
+  });
+  return handleResponse<TranslationResponse>(response);
+}

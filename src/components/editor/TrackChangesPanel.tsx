@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { FC } from 'react';
@@ -11,6 +12,8 @@ interface TrackChangesPanelProps {
   enabled: boolean;
   onToggle: () => void;
   onResolve: (id: string, resolution: 'applied' | 'discarded') => void;
+  variant?: 'side' | 'stacked';
+  className?: string;
 }
 
 const resolutionLabels: Record<EditorChangeRecord['resolution'], string> = {
@@ -19,9 +22,22 @@ const resolutionLabels: Record<EditorChangeRecord['resolution'], string> = {
   discarded: 'Rejetée'
 };
 
-export const TrackChangesPanel: FC<TrackChangesPanelProps> = ({ changes, enabled, onToggle, onResolve }) => {
+export const TrackChangesPanel: FC<TrackChangesPanelProps> = ({
+  changes,
+  enabled,
+  onToggle,
+  onResolve,
+  variant = 'side',
+  className
+}) => {
+  const containerClass = clsx(
+    variant === 'side'
+      ? 'flex h-full flex-col gap-6 border-l border-editor-subtle bg-editor-background/80 px-6 py-8'
+      : 'flex flex-col gap-6 rounded-3xl border border-editor-subtle bg-editor-background/80 px-6 py-8',
+    className
+  );
   return (
-    <aside className="flex h-full flex-col gap-6 border-l border-editor-subtle bg-editor-background/80 px-6 py-8">
+    <aside className={containerClass}>
       <header className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">

@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type FC, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FC, type FormEvent, type ChangeEvent } from 'react';
+import clsx from 'clsx';
 
-import { createChangeRequest, decideChangeRequest, exportDocx, exportPdf, fetchChangeRequests } from './api';
+import { createChangeRequest, decideChangeRequest, exportDocx, exportPdf, fetchChangeRequests, importDocxDraft, requestTranslation } from './api';
 import { LivePreview } from './LivePreview';
 import { TrackChangesPanel } from './TrackChangesPanel';
 import { useEditorState } from './state';
@@ -27,6 +28,7 @@ interface RichTextEditorProps {
   baseVersionId: number;
   initialState?: Partial<EditorState>;
   onStateChange?: (state: EditorState) => void;
+  language: 'fr' | 'nl';
 }
 
 type FeedbackState = { type: 'success' | 'error' | 'info'; message: string } | null;
@@ -49,7 +51,8 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
   contentId,
   baseVersionId,
   initialState,
-  onStateChange
+  onStateChange,
+  language
 }) => {
   const { state, dispatch } = useEditorState(initialState, onStateChange);
   const [changeRequests, setChangeRequests] = useState<ChangeRequestDTO[]>([]);
@@ -57,10 +60,15 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isImportingDocx, setIsImportingDocx] = useState(false);
   const [changeSummary, setChangeSummary] = useState('');
   const [changeComment, setChangeComment] = useState('');
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [previewViewport, setPreviewViewport] = useState<'desktop' | 'mobile'>('desktop');
+  const docxInputRef = useRef<HTMLInputElement>(null);
+  const [compositionMode, setCompositionMode] = useState<'blocks' | 'classic'>('blocks');
+  const [translating, setTranslating] = useState(false);
+  const targetLanguage = language === 'fr' ? 'nl' : 'fr';
 
   const loadChangeRequests = useCallback(async () => {
     if (!contentId) {
@@ -165,7 +173,7 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
     [dispatch]
   );
   const handleBlockMove = useCallback(
-    (id: string, direction: 'up' | 'down' | 'top' | 'bottom') =>
+    (id: string, direction: 'up' | 'down' | 'top' | 'bottom' | number) =>
       dispatch({ type: 'moveBlock', id, direction, summary: 'Bloc réorganisé', payload: { id, direction } }),
     [dispatch]
   );
@@ -182,6 +190,76 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
     dispatch({ type: 'removeCallout', id, summary: 'Encadré retiré', payload: { id } });
   const handleLeadChange = (lead: EditorLead | null) =>
     dispatch({ type: 'setLead', lead, summary: 'Chapeau visuel mis à jour', payload: { hasLead: Boolean(lead) } });
+
+  const handleDocxFileChange = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        return;
+      }
+      setIsImportingDocx(true);
+      setFeedback({ type: 'info', message: 'Import du document .docx en cours…' });
+      try {
+        const data = await importDocxDraft(file);
+        dispatch({
+          type: 'setTitle',
+          value: data.title ?? '',
+          summary: 'Titre importé depuis un DOCX',
+          payload: { source: 'docx' }
+        });
+        dispatch({
+          type: 'setChapeau',
+          value: data.chapeau ?? '',
+          summary: 'Chapô importé depuis un DOCX',
+          payload: { source: 'docx' }
+        });
+        dispatch({
+          type: 'setBody',
+          value: data.body ?? '',
+          summary: 'Contenu importé depuis un DOCX',
+          payload: { source: 'docx' }
+        });
+        setFeedback({ type: 'success', message: 'Le document a été importé dans l’éditeur.' });
+      } catch (error) {
+        setFeedback({ type: 'error', message: (error as Error).message });
+      } finally {
+        setIsImportingDocx(false);
+        event.target.value = '';
+      }
+    },
+    [dispatch]
+  );
+
+  const handleTranslate = useCallback(async () => {
+    setTranslating(true);
+    setFeedback({ type: 'info', message: `Traduction automatique vers ${targetLanguage.toUpperCase()} en cours…` });
+    try {
+      const data = await requestTranslation(contentId, targetLanguage);
+      dispatch({
+        type: 'setTitle',
+        value: data.title ?? '',
+        summary: `Titre traduit en ${targetLanguage}`,
+        payload: { source: 'translation', target: targetLanguage }
+      });
+      dispatch({
+        type: 'setChapeau',
+        value: data.chapeau ?? '',
+        summary: `Chapô traduit en ${targetLanguage}`,
+        payload: { source: 'translation', target: targetLanguage }
+      });
+      dispatch({
+        type: 'setBody',
+        value: data.body ?? '',
+        summary: `Corps traduit en ${targetLanguage}`,
+        payload: { source: 'translation', target: targetLanguage }
+      });
+      setFeedback({ type: 'success', message: `Traduction vers ${targetLanguage.toUpperCase()} appliquée.` });
+    } catch (error) {
+      setFeedback({ type: 'error', message: (error as Error).message });
+    } finally {
+      setTranslating(false);
+    }
+  }, [contentId, dispatch, targetLanguage]);
 
   const handleChangeRequestSubmit = useCallback(
     async (event?: FormEvent) => {
@@ -295,7 +373,14 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
   );
 
   return (
-    <div className="editor-shell">
+    <div className="rounded-3xl border border-editor-subtle bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
+      <input
+        ref={docxInputRef}
+        type="file"
+        accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        className="sr-only"
+        onChange={handleDocxFileChange}
+      />
       <div className="editor-toolbar">
         <div>
           <h1 className="text-base font-semibold uppercase tracking-wide text-slate-600">
@@ -306,12 +391,50 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
+            onClick={handleTranslate}
+            disabled={translating}
+            className="rounded-full border border-primary-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary-600 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {translating ? 'Traduction…' : `Traduire en ${targetLanguage.toUpperCase()}`}
+          </button>
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <button
+              type="button"
+              onClick={() => setCompositionMode('blocks')}
+              className={clsx(
+                'rounded-full px-3 py-1 transition',
+                compositionMode === 'blocks' ? 'bg-primary-600 text-white' : 'text-slate-600'
+              )}
+            >
+              Blocs
+            </button>
+            <button
+              type="button"
+              onClick={() => setCompositionMode('classic')}
+              className={clsx(
+                'rounded-full px-3 py-1 transition',
+                compositionMode === 'classic' ? 'bg-primary-600 text-white' : 'text-slate-600'
+              )}
+            >
+              Classique
+            </button>
+          </div>
+          <button
+            type="button"
             onClick={() => dispatch({ type: 'toggleTrackChanges' })}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 transition hover:border-primary-400 hover:text-primary-600"
           >
             {state.trackChangesEnabled ? 'Suivi actif' : 'Activer le suivi'}
           </button>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => docxInputRef.current?.click()}
+              disabled={isImportingDocx}
+              className="rounded-full border border-primary-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary-600 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isImportingDocx ? 'Import…' : 'Importer (.docx)'}
+            </button>
             <button
               type="button"
               onClick={handleExportDocx}
@@ -352,7 +475,7 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
           </button>
         </div>
       )}
-      <div className="flex flex-col gap-0 lg:grid lg:editor-grid">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="space-y-8 divide-y divide-slate-100">
           <section className="editor-section space-y-5" aria-label="Composition de l’article">
             <div className="grid gap-4">
@@ -388,15 +511,36 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
               </label>
             </div>
           </section>
-          <BlockComposer
-            blocks={state.blocks}
-            footnotes={state.footnotes}
-            onInsert={handleBlockInsert}
-            onUpdate={handleBlockUpdate}
-            onRemove={handleBlockRemove}
-            onMove={handleBlockMove}
-            onDuplicate={handleBlockDuplicate}
-          />
+          {compositionMode === 'blocks' ? (
+            <BlockComposer
+              blocks={state.blocks}
+              footnotes={state.footnotes}
+              onInsert={handleBlockInsert}
+              onUpdate={handleBlockUpdate}
+              onRemove={handleBlockRemove}
+              onMove={handleBlockMove}
+              onDuplicate={handleBlockDuplicate}
+            />
+          ) : (
+            <section className="editor-section space-y-4" aria-label="Édition classique">
+              <p className="text-sm text-slate-500">
+                Mode classique activé. Rédigez l’intégralité de votre article dans un seul cadre. Vous pouvez revenir au mode blocs à tout moment.
+              </p>
+              <textarea
+                value={state.body}
+                onChange={(event) =>
+                  dispatch({
+                    type: 'setBody',
+                    value: event.target.value,
+                    summary: 'Contenu mis à jour (mode classique)',
+                    payload: { mode: 'classic' }
+                  })
+                }
+                className="editor-textarea min-h-[24rem]"
+                placeholder="Votre article complet…"
+              />
+            </section>
+          )}
           <ImageLeadModule lead={state.lead} onChange={handleLeadChange} />
           <CalloutModule
             callouts={state.callouts}
@@ -410,7 +554,6 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
             onUpdate={handleFootnoteUpdate}
             onRemove={handleFootnoteRemove}
           />
-          <SpellcheckPanel text={spellcheckSource} />
           <WorkflowPanel changes={combinedChanges} />
           <section className="editor-section" aria-label="Soumission de proposition">
             <form className="space-y-5" onSubmit={handleChangeRequestSubmit}>
@@ -443,39 +586,50 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
               </button>
             </form>
           </section>
-          <div className="flex justify-end gap-2 pb-4">
-            <button
-              type="button"
-              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-                previewViewport === 'desktop'
-                  ? 'bg-primary-600 text-white'
-                  : 'border border-slate-200 text-slate-600'
-              }`}
-              onClick={() => setPreviewViewport('desktop')}
-            >
-              Desktop
-            </button>
-            <button
-              type="button"
-              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-                previewViewport === 'mobile'
-                  ? 'bg-primary-600 text-white'
-                  : 'border border-slate-200 text-slate-600'
-              }`}
-              onClick={() => setPreviewViewport('mobile')}
-            >
-              Mobile
-            </button>
-          </div>
-          <LivePreview state={state} viewport={previewViewport} />
         </div>
-        <TrackChangesPanel
-          changes={combinedChanges}
-          enabled={state.trackChangesEnabled}
-          onToggle={() => dispatch({ type: 'toggleTrackChanges' })}
-          onResolve={handleResolveChange}
-        />
+        <div className="space-y-6">
+          <aside className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">
+                Prévisualisation
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                    previewViewport === 'desktop'
+                      ? 'bg-primary-600 text-white'
+                      : 'border border-slate-200 text-slate-600'
+                  }`}
+                  onClick={() => setPreviewViewport('desktop')}
+                >
+                  Desktop
+                </button>
+                <button
+                  type="button"
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                    previewViewport === 'mobile'
+                      ? 'bg-primary-600 text-white'
+                      : 'border border-slate-200 text-slate-600'
+                  }`}
+                  onClick={() => setPreviewViewport('mobile')}
+                >
+                  Mobile
+                </button>
+              </div>
+            </div>
+            <LivePreview state={state} viewport={previewViewport} />
+          </aside>
+          <SpellcheckPanel text={spellcheckSource} />
+        </div>
       </div>
+      <TrackChangesPanel
+        variant="stacked"
+        changes={combinedChanges}
+        enabled={state.trackChangesEnabled}
+        onToggle={() => dispatch({ type: 'toggleTrackChanges' })}
+        onResolve={handleResolveChange}
+      />
       {loadingChanges && (
         <div className="border-t border-editor-subtle bg-editor-background px-6 py-3 text-xs text-slate-500">
           Actualisation des propositions en cours…

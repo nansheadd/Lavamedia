@@ -3,19 +3,6 @@
 @tailwind utilities;
 
 @layer components {
-  .editor-shell {
-    @apply editor-card relative isolate overflow-hidden;
-  }
-
-  .editor-shell::after {
-    @apply pointer-events-none absolute inset-0 bg-gradient-to-br from-editor-background/40 via-transparent to-primary-100/30 opacity-0 transition-opacity duration-500 ease-out;
-    content: '';
-  }
-
-  .editor-shell:focus-within::after {
-    @apply opacity-100;
-  }
-
   .editor-section {
     @apply space-y-6 px-6 py-8;
   }

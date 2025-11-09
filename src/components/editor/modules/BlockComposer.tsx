@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import {
   Bars3BottomLeftIcon,
@@ -38,7 +38,7 @@ interface BlockComposerProps {
   onInsert: (block: EditorBlock, position?: number) => void;
   onUpdate: (id: string, patch: Partial<EditorBlock>) => void;
   onRemove: (id: string) => void;
-  onMove: (id: string, direction: 'up' | 'down' | 'top' | 'bottom') => void;
+  onMove: (id: string, direction: 'up' | 'down' | 'top' | 'bottom' | number) => void;
   onDuplicate: (id: string) => void;
 }
 
@@ -241,6 +241,55 @@ export const BlockComposer = ({
       ),
     [footnotes]
   );
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  const handleDragStart = (event: React.DragEvent, blockId: string) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/x-block-id', blockId);
+    setDraggingId(blockId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragOver = (event: React.DragEvent, targetId: string) => {
+    event.preventDefault();
+    if (dragOverId !== targetId) {
+      setDragOverId(targetId);
+    }
+  };
+
+  const handleDrop = (event: React.DragEvent, targetIndex: number, targetId?: string) => {
+    event.preventDefault();
+    const dragged = event.dataTransfer.getData('application/x-block-id') || draggingId;
+    if (!dragged) {
+      return;
+    }
+    if (targetId && dragged === targetId) {
+      setDraggingId(null);
+      setDragOverId(null);
+      return;
+    }
+    const sourceIndex = blocks.findIndex((block) => block.id === dragged);
+    if (sourceIndex === -1) {
+      setDraggingId(null);
+      setDragOverId(null);
+      return;
+    }
+    let destination = targetIndex;
+    if (sourceIndex < targetIndex) {
+      destination = targetIndex - 1;
+    }
+    onMove(dragged, destination);
+    setDraggingId(null);
+    setDragOverId(null);
+  };
+
+  const dropZoneClass =
+    'h-4 w-full rounded-full border border-dashed border-transparent transition-colors duration-150';
 
   return (
     <section className="editor-section space-y-6" aria-label="Corps de l’article">
@@ -267,10 +316,27 @@ export const BlockComposer = ({
       </header>
       <div className="space-y-4">
         {blocks.map((block, index) => (
-          <article
-            key={block.id}
-            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-primary-200"
-          >
+          <Fragment key={block.id}>
+            <div
+              className={clsx(
+                dropZoneClass,
+                dragOverId === block.id && 'border-primary-400 bg-primary-50'
+              )}
+              onDragOver={(event) => handleDragOver(event, block.id)}
+              onDrop={(event) => handleDrop(event, index, block.id)}
+            />
+            <article
+              draggable
+              onDragStart={(event) => handleDragStart(event, block.id)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(event) => handleDragOver(event, block.id)}
+              onDrop={(event) => handleDrop(event, index, block.id)}
+              className={clsx(
+                'rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-primary-200',
+                draggingId === block.id && 'opacity-60',
+                dragOverId === block.id && 'ring-2 ring-primary-400'
+              )}
+            >
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">Bloc {index + 1}</p>
@@ -673,7 +739,16 @@ export const BlockComposer = ({
               )}
             </div>
           </article>
+        </Fragment>
         ))}
+        <div
+          className={clsx(
+            dropZoneClass,
+            dragOverId === 'END' && 'border-primary-400 bg-primary-50'
+          )}
+          onDragOver={(event) => handleDragOver(event, 'END')}
+          onDrop={(event) => handleDrop(event, blocks.length)}
+        />
         {blocks.length === 0 && (
           <div className="rounded-3xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
             Ajoutez un premier bloc pour démarrer votre article.

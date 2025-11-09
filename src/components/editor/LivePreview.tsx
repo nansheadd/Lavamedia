@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import Image from 'next/image';
 import type { FC } from 'react';
 
@@ -193,43 +194,81 @@ const renderBlock = (block: EditorBlock, state: EditorState) => {
 };
 
 export const LivePreview: FC<LivePreviewProps> = ({ state, viewport = 'desktop' }) => {
-  const previewClass =
-    viewport === 'mobile'
-      ? 'mx-auto w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-6 shadow-sm'
-      : 'rounded-3xl border border-slate-200 bg-white p-10 shadow-sm';
+  const isMobile = viewport === 'mobile';
   return (
-    <section aria-label="Aperçu en direct" className="editor-section space-y-10">
-      <header className="space-y-4">
+    <section
+      aria-label="Aperçu en direct"
+      className={clsx(
+        'editor-section space-y-10 w-full',
+        isMobile && 'max-w-sm mx-auto'
+      )}
+    >
+      <header className={clsx('space-y-4', isMobile && 'text-center')}>
         <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">
           Aperçu instantané
         </p>
-        <h1 className="font-editorial text-4xl font-semibold text-slate-900 dark:text-slate-100">
+        <h1
+          className={clsx(
+            'font-editorial text-slate-900 dark:text-slate-100',
+            isMobile ? 'text-3xl' : 'text-4xl'
+          )}
+        >
           {state.title || 'Titre en attente'}
         </h1>
         {state.chapeau && (
-          <p className="max-w-2xl text-lg text-slate-600 dark:text-slate-200">{state.chapeau}</p>
+          <p
+            className={clsx(
+              'text-slate-600 dark:text-slate-200',
+              isMobile ? 'text-base' : 'max-w-2xl text-lg'
+            )}
+          >
+            {state.chapeau}
+          </p>
         )}
       </header>
       {state.lead && (
-        <figure className="overflow-hidden rounded-3xl border border-slate-200 shadow-sm">
-          <div className="relative h-72 w-full">
-            <Image
-              src={state.lead.imageUrl}
-              alt={state.lead.caption || 'Illustration de l’article'}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
+        <figure
+          className={clsx(
+            'overflow-hidden rounded-3xl border border-slate-200 shadow-sm',
+            isMobile && 'rounded-2xl'
+          )}
+        >
+          <div className={clsx('relative w-full', isMobile ? 'h-56' : 'h-72')}>
+            {state.lead.imageUrl ? (
+              <Image
+                key={`${state.lead.imageUrl}-${viewport}`}
+                src={state.lead.imageUrl}
+                alt={state.lead.caption || 'Illustration de l’article'}
+                fill
+                className="object-cover"
+                sizes={isMobile ? '100vw' : '(max-width: 768px) 100vw, 50vw'}
+                priority={isMobile}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-slate-100 text-sm text-slate-500">
+                Ajoutez une image de une
+              </div>
+            )}
           </div>
           {(state.lead.caption || state.lead.credit) && (
-            <figcaption className="flex items-center justify-between bg-slate-50 px-6 py-3 text-sm text-slate-600">
+            <figcaption
+              className={clsx(
+                'bg-slate-50 text-sm text-slate-600',
+                isMobile ? 'px-4 py-2 text-xs' : 'flex items-center justify-between px-6 py-3'
+              )}
+            >
               <span>{state.lead.caption}</span>
               {state.lead.credit && <span className="font-medium">© {state.lead.credit}</span>}
             </figcaption>
           )}
         </figure>
       )}
-      <article className={previewClass}>
+      <article
+        className={clsx(
+          'border border-slate-200 bg-white shadow-sm',
+          isMobile ? 'rounded-2xl p-4' : 'rounded-3xl p-10'
+        )}
+      >
         <div className="space-y-6">
           {state.blocks.length === 0 ? (
             <p className="text-sm text-slate-400">Ajoutez des blocs pour alimenter l’aperçu.</p>
@@ -247,7 +286,7 @@ export const LivePreview: FC<LivePreviewProps> = ({ state, viewport = 'desktop' 
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             Encadrés
           </h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className={clsx('grid gap-4', isMobile ? 'grid-cols-1' : 'md:grid-cols-2')}>
             {state.callouts.map((callout) => (
               <div key={callout.id} className="editor-callout" data-tone={callout.tone}>
                 <p className="font-semibold text-slate-900">{callout.title}</p>
@@ -258,7 +297,12 @@ export const LivePreview: FC<LivePreviewProps> = ({ state, viewport = 'desktop' 
         </div>
       )}
       {state.footnotes.length > 0 && (
-        <aside className="editor-footnotes">
+        <aside
+          className={clsx(
+            'editor-footnotes',
+            isMobile && 'px-4 py-3 text-xs'
+          )}
+        >
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Notes de bas de page
           </p>

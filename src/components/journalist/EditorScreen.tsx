@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { RichTextEditor, type EditorState, type EditorCalloutTone } from '@/components/editor';
 import { fetchFromApi } from '@/lib/auth-service';
 import { MOCK_CONTENT_ITEMS, type MockContentItem, type MockContentVersion } from '@/data/editor-mock';
 import { useLanguage, useTranslations } from '@/contexts/language-context';
+import { useAuth } from '@/contexts/auth-context';
 
 type ContentVersion = MockContentVersion;
 type ContentItem = MockContentItem;
@@ -93,6 +94,7 @@ function prepareEditorState(content: ContentItem): PreparedState {
 
 export function EditorScreen() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [selectedContentId, setSelectedContentId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,6 +103,8 @@ export function EditorScreen() {
   const [usingMockData, setUsingMockData] = useState(false);
   const t = useTranslations();
   const { language } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
+  const isEditorialUser = user ? ['author', 'editor', 'admin'].includes(user.primaryRole) : false;
 
   const requestedContentId = useMemo(() => {
     const param = searchParams.get('contentId');
@@ -133,6 +137,15 @@ export function EditorScreen() {
   }, [pickInitialContentId]);
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [authLoading, user, router]);
+
+  useEffect(() => {
+    if (!user || !isEditorialUser) {
+      return;
+    }
     let cancelled = false;
     const load = async () => {
       setLoading(true);
@@ -192,7 +205,7 @@ export function EditorScreen() {
     return () => {
       cancelled = true;
     };
-  }, [applyMockDataset, pickInitialContentId]);
+  }, [applyMockDataset, pickInitialContentId, user, isEditorialUser]);
 
   const selectedContent = useMemo(
     () => contents.find((content) => content.id === selectedContentId) ?? null,
@@ -204,10 +217,21 @@ export function EditorScreen() {
     [selectedContent]
   );
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
         {t('editor.loading')}
+      </div>
+    );
+  }
+
+  if (!user || !isEditorialUser) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+        <p className="font-semibold text-primary-600">Accès restreint</p>
+        <p className="mt-2 text-sm text-slate-500">
+          Cette section est réservée aux auteurs, éditeurs et administrateurs. Connectez-vous avec un compte habilité.
+        </p>
       </div>
     );
   }
@@ -282,6 +306,7 @@ export function EditorScreen() {
         baseVersionId={prepared.baseVersionId}
         initialState={prepared.state}
         onStateChange={(state) => setLastState(state)}
+        language={language}
       />
     </div>
   );

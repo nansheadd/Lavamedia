@@ -43,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang={fallbackLanguage} className="h-full">
-      <body className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <body className="min-h-screen bg-gradient-to-b from-primary-50 via-white to-primary-50 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <JsonLd data={organizationJsonLd()} />
         <Providers>
           <div className="flex min-h-screen flex-col">
