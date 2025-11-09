@@ -30,10 +30,87 @@ export interface EditorChangeRecord {
   resolution: ChangeResolution;
 }
 
+export type EditorTextStyle =
+  | 'paragraph'
+  | 'lead'
+  | 'heading1'
+  | 'heading2'
+  | 'blockquote';
+
+export type EditorListStyle = 'unordered' | 'ordered';
+
+export type EditorMediaFormat = 'inline' | 'wide' | 'full';
+
+export type EditorMediaAlignment = 'left' | 'center' | 'right';
+
+export interface EditorBlockBase {
+  id: string;
+  label?: string;
+  footnoteIds?: string[];
+}
+
+export interface EditorTextBlock extends EditorBlockBase {
+  type: 'text';
+  style: EditorTextStyle;
+  content: string;
+}
+
+export interface EditorListBlock extends EditorBlockBase {
+  type: 'list';
+  style: EditorListStyle;
+  items: string[];
+}
+
+export interface EditorImageBlock extends EditorBlockBase {
+  type: 'image';
+  url: string;
+  caption?: string;
+  credit?: string;
+  format: EditorMediaFormat;
+  alignment: EditorMediaAlignment;
+}
+
+export interface EditorGalleryImage {
+  id: string;
+  url: string;
+  caption?: string;
+  credit?: string;
+}
+
+export interface EditorGalleryBlock extends EditorBlockBase {
+  type: 'gallery';
+  layout: 'grid' | 'carousel';
+  images: EditorGalleryImage[];
+}
+
+export interface EditorVideoBlock extends EditorBlockBase {
+  type: 'video';
+  url: string;
+  title?: string;
+  poster?: string;
+  provider?: 'youtube' | 'vimeo' | 'dailymotion' | 'file';
+}
+
+export interface EditorAudioBlock extends EditorBlockBase {
+  type: 'audio';
+  url: string;
+  title?: string;
+  transcript?: string;
+}
+
+export type EditorBlock =
+  | EditorTextBlock
+  | EditorListBlock
+  | EditorImageBlock
+  | EditorGalleryBlock
+  | EditorVideoBlock
+  | EditorAudioBlock;
+
 export interface EditorState {
   title: string;
   chapeau: string;
   body: string;
+  blocks: EditorBlock[];
   footnotes: EditorFootnote[];
   callouts: EditorCallout[];
   lead: EditorLead | null;
