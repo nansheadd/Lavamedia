@@ -29,6 +29,9 @@
       "@/contexts/*": [
         "src/contexts/*"
       ],
+      "@/i18n/*": [
+        "src/i18n/*"
+      ],
       "@/styles/*": [
         "src/styles/*"
       ],
