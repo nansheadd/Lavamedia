@@ -15,10 +15,50 @@ logger = logging.getLogger(__name__)
 
 
 ROLE_DEFINITIONS: dict[str, str] = {
-    "admin": "Administrateur de la plateforme",
-    "journalist": "Rédacteur et créateur de contenu",
+    "admin": "Administrateur/administratrice",
+    "editor": "Éditeur/éditrice",
+    "author": "Auteur/autrice",
+    "contributor": "Contributeur/contributrice",
+    "subscriber": "Abonné/abonnée",
+    "client": "Client",
     "user": "Compte lecteur Lavamedia",
 }
+
+DEFAULT_PASSWORD = "password"
+
+DEFAULT_ROLE_USERS = [
+    {
+        "email": "admin@lava.com",
+        "full_name": "Administrateur Lavamedia",
+        "role": "admin",
+        "is_superuser": True,
+    },
+    {
+        "email": "editeur@lava.com",
+        "full_name": "Éditeur Lavamedia",
+        "role": "editor",
+    },
+    {
+        "email": "auteur@lava.com",
+        "full_name": "Auteur Lavamedia",
+        "role": "author",
+    },
+    {
+        "email": "contributeur@lava.com",
+        "full_name": "Contributeur Lavamedia",
+        "role": "contributor",
+    },
+    {
+        "email": "abonne@lava.com",
+        "full_name": "Abonné Lavamedia",
+        "role": "subscriber",
+    },
+    {
+        "email": "client@lava.com",
+        "full_name": "Client Lavamedia",
+        "role": "client",
+    },
+]
 
 
 async def ensure_seed_data() -> None:
@@ -26,6 +66,13 @@ async def ensure_seed_data() -> None:
 
     async with AsyncSessionLocal() as session:
         roles: dict[str, Role] = {}
+        existing_author = await session.scalar(select(Role).where(Role.name == "author"))
+        journalist_role = await session.scalar(select(Role).where(Role.name == "journalist"))
+        if journalist_role and not existing_author:
+            journalist_role.name = "author"
+            session.add(journalist_role)
+            await session.flush()
+
         for name, description in ROLE_DEFINITIONS.items():
             role = await session.scalar(select(Role).where(Role.name == name))
             if not role:
@@ -35,90 +82,58 @@ async def ensure_seed_data() -> None:
                 await session.flush()
             roles[name] = role
 
-        admin_role = roles["admin"]
-
-        result = await session.execute(
-            select(User)
-            .options(selectinload(User.roles))
-            .where(User.email == "admin@lava.com")
-        )
-        user = result.scalar_one_or_none()
-
-        if not user:
-            logger.info("Creating default admin user")
-            user = User(
-                email="admin@lava.com",
-                full_name="Administrateur Lavamedia",
-                hashed_password=get_password_hash("password"),
-                is_active=True,
-                is_superuser=True,
-                status="active",
-            )
-            user.roles.append(admin_role)
-            session.add(user)
-        else:
-            updated = False
-
-            if not verify_password("password", user.hashed_password):
-                user.hashed_password = get_password_hash("password")
-                updated = True
-
-            if not user.is_superuser:
-                user.is_superuser = True
-                updated = True
-
-            if not user.is_active:
-                user.is_active = True
-                updated = True
-
-            if user.status != "active":
-                user.status = "active"
-                updated = True
-
-            if admin_role.id not in {role.id for role in user.roles}:
-                user.roles.append(admin_role)
-                updated = True
-
-            if updated:
-                logger.info("Updating default admin user to ensure access")
-                session.add(user)
-
-        journalist_role = roles["journalist"]
-        journalist_user = await session.scalar(
-            select(User).where(User.email == "journaliste@lava.com")
-        )
-        if not journalist_user:
-            logger.info("Creating default journalist user")
-            journalist_user = User(
-                email="journaliste@lava.com",
-                full_name="Journaliste Lavamedia",
-                hashed_password=get_password_hash("password"),
-                is_active=True,
-                is_superuser=False,
-                status="active",
-            )
-            journalist_user.roles.append(journalist_role)
-            session.add(journalist_user)
-        else:
-            updated = False
-            if not verify_password("password", journalist_user.hashed_password):
-                journalist_user.hashed_password = get_password_hash("password")
-                updated = True
-
-            if not journalist_user.is_active:
-                journalist_user.is_active = True
-                updated = True
-
-            if journalist_user.status != "active":
-                journalist_user.status = "active"
-                updated = True
-
-            if journalist_role.id not in {role.id for role in journalist_user.roles}:
-                journalist_user.roles.append(journalist_role)
-                updated = True
-
-            if updated:
-                logger.info("Updating default journalist user")
-                session.add(journalist_user)
+        for user_config in DEFAULT_ROLE_USERS:
+            role = roles[user_config["role"]]
+            await _ensure_default_user(session, role, user_config)
 
         await session.commit()
+
+
+async def _ensure_default_user(session: AsyncSessionLocal, role: Role, config: dict[str, str | bool]) -> None:
+    """Create or refresh a default user tied to a known role."""
+
+    stmt = select(User).options(selectinload(User.roles)).where(User.email == config["email"])
+    user = await session.scalar(stmt)
+
+    if not user:
+        logger.info("Creating default %s user", role.name)
+        user = User(
+            email=config["email"],
+            full_name=config["full_name"],
+            hashed_password=get_password_hash(DEFAULT_PASSWORD),
+            is_active=True,
+            is_superuser=bool(config.get("is_superuser")),
+            status="active",
+        )
+        user.roles.append(role)
+        session.add(user)
+        return
+
+    updated = False
+    if not verify_password(DEFAULT_PASSWORD, user.hashed_password):
+        user.hashed_password = get_password_hash(DEFAULT_PASSWORD)
+        updated = True
+
+    if config.get("is_superuser") and not user.is_superuser:
+        user.is_superuser = True
+        updated = True
+
+    if not user.is_active:
+        user.is_active = True
+        updated = True
+
+    if user.status != "active":
+        user.status = "active"
+        updated = True
+
+    if user.full_name != config["full_name"]:
+        user.full_name = config["full_name"]
+        updated = True
+
+    if role.id not in {assigned.id for assigned in user.roles}:
+        user.roles.append(role)
+        updated = True
+
+    if updated:
+        logger.info("Updating default %s user", config["email"])
+        session.add(user)

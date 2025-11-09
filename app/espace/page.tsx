@@ -31,10 +31,15 @@ export default function PrivateSpacePage() {
     return null;
   }
 
+  const isAuthor = user.primaryRole === 'author';
   const benefits = [
     {
       title: 'Statut du compte',
-      description: user.primaryRole === 'user' ? 'Lecteur actif' : user.primaryRole === 'journalist' ? 'Journaliste confirmé' : 'Administrateur'
+      description: user.primaryRole === 'admin'
+        ? 'Administrateur'
+        : isAuthor
+          ? 'Auteur confirmé'
+          : 'Lecteur actif'
     },
     {
       title: 'E-mail',
@@ -46,8 +51,8 @@ export default function PrivateSpacePage() {
     }
   ];
 
-  const nextStepLink = user.primaryRole === 'admin' ? '/admin' : user.primaryRole === 'journalist' ? '/journalist' : '/';
-  const nextStepLabel = user.primaryRole === 'admin' ? 'Accéder au back-office' : user.primaryRole === 'journalist' ? 'Ouvrir le tableau de bord journaliste' : 'Explorer les articles';
+  const nextStepLink = user.primaryRole === 'admin' ? '/admin' : isAuthor ? '/journalist' : '/';
+  const nextStepLabel = user.primaryRole === 'admin' ? 'Accéder au back-office' : isAuthor ? 'Ouvrir le tableau de bord auteur' : 'Explorer les articles';
 
   return (
     <Container className="py-16">

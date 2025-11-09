@@ -55,7 +55,7 @@ export type AuthenticatedUser = {
   email: string;
   fullName: string | null;
   roles: string[];
-  primaryRole: 'user' | 'journalist' | 'admin';
+  primaryRole: 'user' | 'author' | 'admin';
   stripeCustomerId: string | null;
 };
 
@@ -305,9 +305,9 @@ export async function getProfile(): Promise<AuthenticatedUser> {
   }>(response);
 
   const roles = data.roles?.map((role) => role.name) ?? [];
-  const priority: Array<'admin' | 'journalist' | 'user'> = ['admin', 'journalist', 'user'];
-  const primaryRole = (roles.find((role): role is 'admin' | 'journalist' | 'user' =>
-    priority.includes(role as 'admin' | 'journalist' | 'user')
+  const priority: Array<'admin' | 'author' | 'user'> = ['admin', 'author', 'user'];
+  const primaryRole = (roles.find((role): role is 'admin' | 'author' | 'user' =>
+    priority.includes(role as 'admin' | 'author' | 'user')
   ) ?? 'user');
 
   return {

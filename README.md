@@ -111,7 +111,7 @@ git switch -c ma-fonctionnalite
 
 ## Structure
 
-- `app/` : pages publiques, espace journaliste et administration (App Router).
+- `app/` : pages publiques, espace auteur et administration (App Router).
 - `src/components/` : design system accessible (boutons, cartes, formulaires, navigation).
 - `src/contexts/` : contextes globaux (authentification, providers React Query).
 - `src/lib/` : utilitaires (données fictives, SEO, authentification mockée).
@@ -120,9 +120,13 @@ git switch -c ma-fonctionnalite
 
 ## Authentification
 
-Le frontend tente d'abord d'appeler l'URL définie par `NEXT_PUBLIC_API_URL`. En développement, si cette URL est inaccessible, il retombe automatiquement sur `http://127.0.0.1:8000/api` (puis `http://localhost:8000/api`) pour joindre votre API locale. Si aucune API n'est atteignable, un mode démo se déclenche : utilisez `admin@lava.com` / `password` et un profil administrateur est injecté côté client. Définissez `NEXT_PUBLIC_ENABLE_MOCK_AUTH=false` pour forcer l'appel systématique de l'API. Les rôles disponibles : lecteur, journaliste, admin.
+Le frontend tente d'abord d'appeler l'URL définie par `NEXT_PUBLIC_API_URL`. En développement, si cette URL est inaccessible, il retombe automatiquement sur `http://127.0.0.1:8000/api` (puis `http://localhost:8000/api`) pour joindre votre API locale. Si aucune API n'est atteignable, un mode démo se déclenche : utilisez `admin@lava.com` / `password` et un profil administrateur est injecté côté client. Définissez `NEXT_PUBLIC_ENABLE_MOCK_AUTH=false` pour forcer l'appel systématique de l'API. Les rôles disponibles : lecteur, auteur, éditeur, contributeur, abonné, client et admin.
 
 Les identifiants suivants sont seedés automatiquement côté backend :
 
 - `admin@lava.com` / `password` → rôle administrateur
-- `journaliste@lava.com` / `password` → rôle journaliste
+- `editeur@lava.com` / `password` → rôle éditeur
+- `auteur@lava.com` / `password` → rôle auteur
+- `contributeur@lava.com` / `password` → rôle contributeur
+- `abonne@lava.com` / `password` → rôle abonné
+- `client@lava.com` / `password` → rôle client

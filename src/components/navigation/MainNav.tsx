@@ -23,7 +23,7 @@ export function MainNav() {
   const dashboardHref = user
     ? user.primaryRole === 'admin'
       ? '/admin'
-      : user.primaryRole === 'journalist'
+      : user.primaryRole === 'author'
         ? '/journalist'
         : '/espace'
     : '/login';
