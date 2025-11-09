@@ -83,5 +83,42 @@ async def ensure_seed_data() -> None:
                 logger.info("Updating default admin user to ensure access")
                 session.add(user)
 
-        await session.commit()
+        journalist_role = roles["journalist"]
+        journalist_user = await session.scalar(
+            select(User).where(User.email == "journaliste@lava.com")
+        )
+        if not journalist_user:
+            logger.info("Creating default journalist user")
+            journalist_user = User(
+                email="journaliste@lava.com",
+                full_name="Journaliste Lavamedia",
+                hashed_password=get_password_hash("password"),
+                is_active=True,
+                is_superuser=False,
+                status="active",
+            )
+            journalist_user.roles.append(journalist_role)
+            session.add(journalist_user)
+        else:
+            updated = False
+            if not verify_password("password", journalist_user.hashed_password):
+                journalist_user.hashed_password = get_password_hash("password")
+                updated = True
 
+            if not journalist_user.is_active:
+                journalist_user.is_active = True
+                updated = True
+
+            if journalist_user.status != "active":
+                journalist_user.status = "active"
+                updated = True
+
+            if journalist_role.id not in {role.id for role in journalist_user.roles}:
+                journalist_user.roles.append(journalist_role)
+                updated = True
+
+            if updated:
+                logger.info("Updating default journalist user")
+                session.add(journalist_user)
+
+        await session.commit()

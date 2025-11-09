@@ -121,3 +121,8 @@ git switch -c ma-fonctionnalite
 ## Authentification
 
 Le frontend tente d'abord d'appeler l'URL définie par `NEXT_PUBLIC_API_URL`. En développement, si cette URL est inaccessible, il retombe automatiquement sur `http://127.0.0.1:8000/api` (puis `http://localhost:8000/api`) pour joindre votre API locale. Si aucune API n'est atteignable, un mode démo se déclenche : utilisez `admin@lava.com` / `password` et un profil administrateur est injecté côté client. Définissez `NEXT_PUBLIC_ENABLE_MOCK_AUTH=false` pour forcer l'appel systématique de l'API. Les rôles disponibles : lecteur, journaliste, admin.
+
+Les identifiants suivants sont seedés automatiquement côté backend :
+
+- `admin@lava.com` / `password` → rôle administrateur
+- `journaliste@lava.com` / `password` → rôle journaliste

@@ -6,6 +6,19 @@ const REFRESH_TOKEN_KEY = 'lavamedia.refreshToken';
 const DEFAULT_API_BASE = process.env.NODE_ENV === 'development' ? 'http://localhost:8000/api' : '/api';
 const LOCAL_FALLBACK_BASES = ['http://127.0.0.1:8000/api', 'http://localhost:8000/api'];
 const PRIMARY_API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE).trim();
+function normalizeBasePath(candidate: string) {
+  const trimmed = candidate.trim().replace(/\/$/, '');
+  try {
+    const url = new URL(trimmed);
+    if (url.hostname === '0.0.0.0') {
+      url.hostname = '127.0.0.1';
+    }
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return trimmed;
+  }
+}
+
 const API_BASE_CANDIDATES = Array.from(
   new Set(
     [
@@ -14,7 +27,7 @@ const API_BASE_CANDIDATES = Array.from(
     ]
       .map((candidate) => candidate.trim())
       .filter((candidate) => candidate.length > 0)
-      .map((candidate) => candidate.replace(/\/$/, ''))
+      .map(normalizeBasePath)
   )
 );
 const API_BASES = API_BASE_CANDIDATES.length > 0 ? API_BASE_CANDIDATES : ['/api'];
