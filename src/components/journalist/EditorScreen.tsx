@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { RichTextEditor, type EditorState, type EditorCalloutTone } from '@/components/editor';
+import { fetchFromApi } from '@/lib/auth-service';
 
 type ContentVersion = {
   id: number;
@@ -111,7 +112,7 @@ export function EditorScreen() {
     const load = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/content');
+        const response = await fetchFromApi('/api/content');
         if (!response.ok) {
           const message = await response.text();
           throw new Error(message || 'Impossible de récupérer les contenus.');

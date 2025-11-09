@@ -94,7 +94,7 @@ function buildUrl(base: string | undefined, path: string) {
   return `${base}${cleanPath}`;
 }
 
-async function fetchFromApi(path: string, init?: RequestInit): Promise<Response> {
+export async function fetchFromApi(path: string, init?: RequestInit): Promise<Response> {
   let lastNetworkError: unknown;
 
   for (const base of API_BASES) {
