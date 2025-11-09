@@ -17,6 +17,15 @@ Plateforme Next.js pour la rédaction numérique Lavamedia. Ce monorepo contient
 
 ## Installation
 
+### Configuration locale
+
+Dupliquez (ou laissez en place) les fichiers d'environnement générés pour le développement :
+
+- `.env` pour l'API FastAPI (SQLite locale + CORS sur http://localhost:3000 et http://127.0.0.1:3000).
+- `.env.local` pour le frontend Next.js (`NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api` et `NEXT_PUBLIC_ENABLE_MOCK_AUTH=false`).
+
+Assurez-vous ensuite de démarrer les deux services avec ces fichiers chargés.
+
 ### Frontend
 
 ```bash
@@ -111,4 +120,4 @@ git switch -c ma-fonctionnalite
 
 ## Authentification
 
-Authentification mockée avec JWT en localStorage (email + mot de passe `password`). Les rôles disponibles : lecteur, journaliste, admin.
+Le frontend tente d'abord d'appeler l'URL définie par `NEXT_PUBLIC_API_URL`. En développement, si cette URL est inaccessible, il retombe automatiquement sur `http://127.0.0.1:8000/api` (puis `http://localhost:8000/api`) pour joindre votre API locale. Si aucune API n'est atteignable, un mode démo se déclenche : utilisez `admin@lava.com` / `password` et un profil administrateur est injecté côté client. Définissez `NEXT_PUBLIC_ENABLE_MOCK_AUTH=false` pour forcer l'appel systématique de l'API. Les rôles disponibles : lecteur, journaliste, admin.

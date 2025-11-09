@@ -4,7 +4,21 @@ const ACCESS_TOKEN_KEY = 'lavamedia.accessToken';
 const REFRESH_TOKEN_KEY = 'lavamedia.refreshToken';
 
 const DEFAULT_API_BASE = process.env.NODE_ENV === 'development' ? 'http://localhost:8000/api' : '/api';
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE).replace(/\/$/, '');
+const LOCAL_FALLBACK_BASES = ['http://127.0.0.1:8000/api', 'http://localhost:8000/api'];
+const PRIMARY_API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE).trim();
+const API_BASE_CANDIDATES = Array.from(
+  new Set(
+    [
+      PRIMARY_API_BASE,
+      ...(process.env.NODE_ENV === 'development' ? LOCAL_FALLBACK_BASES : [])
+    ]
+      .map((candidate) => candidate.trim())
+      .filter((candidate) => candidate.length > 0)
+      .map((candidate) => candidate.replace(/\/$/, ''))
+  )
+);
+const API_BASES = API_BASE_CANDIDATES.length > 0 ? API_BASE_CANDIDATES : ['/api'];
+const MOCK_AUTH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_MOCK_AUTH !== 'false' && process.env.NODE_ENV === 'development';
 
 type TokenResponse = {
   access_token: string;
@@ -32,18 +46,63 @@ export type AuthenticatedUser = {
   stripeCustomerId: string | null;
 };
 
-function buildUrl(path: string) {
+const MOCK_ACCESS_TOKEN = 'mock-access-token';
+const MOCK_REFRESH_TOKEN = 'mock-refresh-token';
+const MOCK_TOKENS: TokenResponse = {
+  access_token: MOCK_ACCESS_TOKEN,
+  refresh_token: MOCK_REFRESH_TOKEN,
+  token_type: 'Bearer'
+};
+const MOCK_CREDENTIALS = {
+  email: 'admin@lava.com',
+  password: 'password'
+};
+
+const MOCK_USER: AuthenticatedUser = {
+  id: 1,
+  email: 'admin@lava.com',
+  fullName: 'Administrateur Lavamedia',
+  roles: ['admin'],
+  primaryRole: 'admin',
+  stripeCustomerId: null
+};
+
+function buildUrl(base: string | undefined, path: string) {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
-  if (!API_BASE_URL) {
+  if (!base) {
     return cleanPath;
   }
 
-  if (cleanPath.startsWith('/api') && API_BASE_URL.endsWith('/api')) {
-    return `${API_BASE_URL}${cleanPath.slice(4)}`;
+  if (cleanPath.startsWith('/api') && base.endsWith('/api')) {
+    return `${base}${cleanPath.slice(4)}`;
   }
 
-  return `${API_BASE_URL}${cleanPath}`;
+  return `${base}${cleanPath}`;
+}
+
+async function fetchFromApi(path: string, init?: RequestInit): Promise<Response> {
+  let lastNetworkError: unknown;
+
+  for (const base of API_BASES) {
+    try {
+      return await fetch(buildUrl(base, path), init);
+    } catch (error) {
+      if (!isNetworkError(error)) {
+        throw error;
+      }
+      lastNetworkError = error;
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`API base ${base} unreachable, trying next candidate`, error);
+      }
+    }
+  }
+
+  if (lastNetworkError) {
+    throw lastNetworkError;
+  }
+
+  throw new Error('Aucune URL API valide configurée.');
 }
 
 async function parseBody(response: Response) {
@@ -89,13 +148,32 @@ function storeTokens(tokens: TokenResponse) {
   localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
 }
 
+function isMockAccessToken(token: string | null) {
+  return MOCK_AUTH_ENABLED && token === MOCK_ACCESS_TOKEN;
+}
+
+function isMockRefreshToken(token: string | null) {
+  return MOCK_AUTH_ENABLED && token === MOCK_REFRESH_TOKEN;
+}
+
+function canUseMockAuth(email: string, password: string) {
+  return MOCK_AUTH_ENABLED && email === MOCK_CREDENTIALS.email && password === MOCK_CREDENTIALS.password;
+}
+
+function isNetworkError(error: unknown): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  return error instanceof TypeError || (error instanceof Error && error.message.toLowerCase().includes('network'));
+}
+
 export function clearTokens() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
 export async function signup(payload: SignupPayload): Promise<SignupResponse> {
-  const response = await fetch(buildUrl('/api/auth/signup'), {
+  const response = await fetchFromApi('/api/auth/signup', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -114,23 +192,40 @@ export async function signup(payload: SignupPayload): Promise<SignupResponse> {
 }
 
 export async function login(email: string, password: string) {
-  const response = await fetch(buildUrl('/api/auth/login'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email, password })
-  });
+  try {
+    const response = await fetchFromApi('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
 
-  const tokens = await handleResponse<TokenResponse>(response);
-  storeTokens(tokens);
+    const tokens = await handleResponse<TokenResponse>(response);
+    storeTokens(tokens);
+  } catch (error) {
+    if (canUseMockAuth(email, password) && isNetworkError(error)) {
+      storeTokens(MOCK_TOKENS);
+      return;
+    }
+    if (isNetworkError(error)) {
+      throw new Error(
+        "Impossible de contacter l'API d'authentification. Vérifiez que le backend tourne sur http://localhost:8000 et qu'il est accessible."
+      );
+    }
+    throw error instanceof Error ? error : new Error('Connexion impossible. Réessayez.');
+  }
 }
 
 export async function logout() {
   const accessToken = getAccessToken();
+  if (isMockAccessToken(accessToken)) {
+    clearTokens();
+    return;
+  }
   try {
     if (accessToken) {
-      await fetch(buildUrl('/api/auth/logout'), {
+      await fetchFromApi('/api/auth/logout', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`
@@ -148,8 +243,13 @@ export async function refreshToken() {
     return false;
   }
 
+  if (isMockRefreshToken(refresh)) {
+    storeTokens(MOCK_TOKENS);
+    return true;
+  }
+
   try {
-    const response = await fetch(buildUrl('/api/auth/refresh'), {
+    const response = await fetchFromApi('/api/auth/refresh', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -173,7 +273,11 @@ export async function getProfile(): Promise<AuthenticatedUser> {
     throw new Error('Utilisateur non authentifié');
   }
 
-  const response = await fetch(buildUrl('/api/auth/me'), {
+  if (isMockAccessToken(accessToken)) {
+    return MOCK_USER;
+  }
+
+  const response = await fetchFromApi('/api/auth/me', {
     headers: {
       Authorization: `Bearer ${accessToken}`
     }

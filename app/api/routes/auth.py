@@ -42,11 +42,8 @@ router = APIRouter(tags=["auth"])
 
 
 def _user_to_schema(user: User) -> UserRead:
-    return UserRead.model_validate(
-        user,
-        from_attributes=True,
-        update={"mfa_enabled": bool(user.mfa_secret)},
-    )
+    setattr(user, 'mfa_enabled', bool(user.mfa_secret))
+    return UserRead.model_validate(user, from_attributes=True)
 
 
 @router.post("/auth/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
