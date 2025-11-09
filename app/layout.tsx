@@ -7,6 +7,7 @@ import { MainNav } from '@/components/navigation/MainNav';
 import { Footer } from '@/components/navigation/Footer';
 import { JsonLd } from '@/components/seo/json-ld';
 import { organizationJsonLd } from '@/lib/structured-data';
+import { fallbackLanguage } from '@/i18n/translations';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.lavamedia.example'),
@@ -41,7 +42,7 @@ export default function RootLayout({
   children: ReactNode;
 }) {
   return (
-    <html lang="fr" className="h-full">
+    <html lang={fallbackLanguage} className="h-full">
       <body className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <JsonLd data={organizationJsonLd()} />
         <Providers>

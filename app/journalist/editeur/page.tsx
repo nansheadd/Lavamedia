@@ -1,5 +1,4 @@
-import { SectionHeading } from '@/components/ui/section-heading';
-import { EditorScreen } from '@/components/journalist/EditorScreen';
+import { JournalistEditorContent } from '@/components/pages/JournalistEditorContent';
 
 export const metadata = {
   title: 'Éditeur WYSIWYG',
@@ -7,14 +6,5 @@ export const metadata = {
 };
 
 export default function JournalistEditorPage() {
-  return (
-    <div className="space-y-10">
-      <SectionHeading
-        eyebrow="Éditeur riche"
-        title="Composez vos articles en toute sérénité"
-        description="Prévisualisation en temps réel, gestion des métadonnées et validations intégrées."
-      />
-      <EditorScreen />
-    </div>
-  );
+  return <JournalistEditorContent />;
 }

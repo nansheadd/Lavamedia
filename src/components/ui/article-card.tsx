@@ -1,8 +1,12 @@
+'use client';
+
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
+import { nl as nlLocale } from 'date-fns/locale/nl';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
+import { useLanguage, useTranslations } from '@/contexts/language-context';
 
 type ArticleCardProps = {
   slug: string;
@@ -13,6 +17,10 @@ type ArticleCardProps = {
 };
 
 export function ArticleCard({ slug, title, category, excerpt, publishedAt }: ArticleCardProps) {
+  const { language } = useLanguage();
+  const t = useTranslations();
+  const locale = language === 'nl' ? nlLocale : fr;
+
   return (
     <Card>
       <Badge>{category}</Badge>
@@ -26,9 +34,9 @@ export function ArticleCard({ slug, title, category, excerpt, publishedAt }: Art
       </CardTitle>
       <CardDescription>{excerpt}</CardDescription>
       <CardFooter>
-        <time dateTime={publishedAt}>{format(new Date(publishedAt), 'd MMMM yyyy', { locale: fr })}</time>
+        <time dateTime={publishedAt}>{format(new Date(publishedAt), 'd MMMM yyyy', { locale })}</time>
         <Link className="text-primary-600 hover:underline" href={`/article/${slug}`}>
-          Lire l’article
+          {t('articleCard.readMore')}
         </Link>
       </CardFooter>
     </Card>

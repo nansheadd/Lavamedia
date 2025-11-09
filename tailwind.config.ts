@@ -8,21 +8,21 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          50: '#f2f7ff',
-          100: '#e1edff',
-          200: '#b9d2ff',
-          300: '#88b4ff',
-          400: '#5d94ff',
-          500: '#306eff',
-          600: '#1851db',
-          700: '#123cab',
-          800: '#102c7b',
-          900: '#0c1d4c'
+          50: '#fff4f0',
+          100: '#ffe1d6',
+          200: '#ffc3ad',
+          300: '#ffa07f',
+          400: '#ff7c51',
+          500: '#f04e23',
+          600: '#d4441f',
+          700: '#a9371a',
+          800: '#7e2a14',
+          900: '#4f1a0c'
         },
         editor: {
           background: '#f8fafc',
           surface: '#ffffff',
-          accent: '#1851db',
+          accent: '#f04e23',
           muted: '#1e293b',
           subtle: '#e2e8f0',
           warning: '#f97316',
