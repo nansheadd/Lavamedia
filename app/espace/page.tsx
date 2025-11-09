@@ -31,7 +31,9 @@ export default function PrivateSpacePage() {
     return null;
   }
 
+  const editorialRoles = new Set(['author', 'editor', 'admin']);
   const isAuthor = user.primaryRole === 'author';
+  const canAccessStudio = editorialRoles.has(user.primaryRole);
   const benefits = [
     {
       title: 'Statut du compte',
@@ -51,8 +53,8 @@ export default function PrivateSpacePage() {
     }
   ];
 
-  const nextStepLink = user.primaryRole === 'admin' ? '/admin' : isAuthor ? '/journalist' : '/';
-  const nextStepLabel = user.primaryRole === 'admin' ? 'Accéder au back-office' : isAuthor ? 'Ouvrir le tableau de bord auteur' : 'Explorer les articles';
+  const nextStepLink = user.primaryRole === 'admin' ? '/admin' : canAccessStudio ? '/journalist' : '/';
+  const nextStepLabel = user.primaryRole === 'admin' ? 'Accéder au back-office' : canAccessStudio ? 'Ouvrir le tableau de bord auteur' : 'Explorer les articles';
 
   return (
     <Container className="py-16">
@@ -62,6 +64,24 @@ export default function PrivateSpacePage() {
           title={`Bonjour ${user.fullName ?? user.email}`}
           description="Retrouvez ici un aperçu rapide de votre profil et un accès direct à vos outils."
         />
+        {canAccessStudio ? (
+          <div className="rounded-3xl border border-primary-100 bg-primary-50/70 p-6 shadow-sm dark:border-primary-700 dark:bg-primary-900/40">
+            <p className="text-sm font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-300">
+              Studio éditorial
+            </p>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              Accédez à vos brouillons et à l’éditeur riche en un clic.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href="/journalist/editeur">Ouvrir l’éditeur</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/journalist/brouillons">Gérer mes brouillons</Link>
+              </Button>
+            </div>
+          </div>
+        ) : null}
         <div className="grid gap-6 md:grid-cols-3">
           {benefits.map((benefit) => (
             <Card key={benefit.title} className="bg-white/80 backdrop-blur dark:bg-slate-900/80">

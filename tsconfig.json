@@ -32,6 +32,9 @@
       "@/styles/*": [
         "src/styles/*"
       ],
+      "@/data/*": [
+        "src/data/*"
+      ],
       "@/app/*": [
         "app/*"
       ],

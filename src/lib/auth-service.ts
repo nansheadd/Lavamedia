@@ -304,7 +304,12 @@ export async function getProfile(): Promise<AuthenticatedUser> {
     stripe_customer_id: string | null;
   }>(response);
 
-  const roles = data.roles?.map((role) => role.name) ?? [];
+  const mapRoleName = (name: string): string => {
+    if (name === 'journalist') return 'author';
+    return name;
+  };
+
+  const roles = data.roles?.map((role) => mapRoleName(role.name)) ?? [];
   const priority: Array<'admin' | 'author' | 'user'> = ['admin', 'author', 'user'];
   const primaryRole = (roles.find((role): role is 'admin' | 'author' | 'user' =>
     priority.includes(role as 'admin' | 'author' | 'user')

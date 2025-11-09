@@ -1,6 +1,8 @@
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Card, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { CreateArticleForm } from '@/components/journalist/CreateArticleForm';
+import { JournalistAccessGuard } from '@/components/journalist/JournalistAccessGuard';
 
 export const metadata = {
   title: 'Gestion des brouillons',
@@ -25,15 +27,17 @@ const drafts = [
 export default function JournalistDraftsPage() {
   return (
     <div className="space-y-10">
-      <SectionHeading
-        eyebrow="Brouillons"
-        title="Centralisez vos articles en préparation"
-        description="Assignez des tâches, commentez les passages clés et suivez les validations."
-      />
-      <div className="grid gap-6">
-        {drafts.map((draft) => (
-          <Card key={draft.title}>
-            <CardTitle>{draft.title}</CardTitle>
+      <JournalistAccessGuard>
+        <SectionHeading
+          eyebrow="Brouillons"
+          title="Centralisez vos articles en préparation"
+          description="Assignez des tâches, commentez les passages clés et suivez les validations."
+        />
+        <CreateArticleForm />
+        <div className="grid gap-6">
+          {drafts.map((draft) => (
+            <Card key={draft.title}>
+              <CardTitle>{draft.title}</CardTitle>
             <CardDescription>{draft.owner}</CardDescription>
             <CardFooter>
               <p className="text-xs text-slate-500">
@@ -42,9 +46,10 @@ export default function JournalistDraftsPage() {
               <Button variant="ghost">Ouvrir</Button>
             </CardFooter>
             <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-primary-500">{draft.status}</p>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      </JournalistAccessGuard>
     </div>
   );
 }

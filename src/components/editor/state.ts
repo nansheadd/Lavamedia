@@ -65,7 +65,7 @@ const cloneBlock = (block: EditorBlock): EditorBlock => {
     case 'audio':
       return { ...block } satisfies EditorAudioBlock;
     default:
-      return { ...block } as EditorBlock;
+      return block;
   }
 };
 

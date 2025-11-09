@@ -1,3 +1,6 @@
+
+const API_PROXY_TARGET = (process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api').replace(/\/$/, '');
+
 /** @type {import('next').NextConfig} */
 const securityHeaders = [
   {
@@ -71,6 +74,14 @@ const nextConfig = {
             value: 'public, max-age=31536000, immutable'
           }
         ]
+      }
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${API_PROXY_TARGET}/:path*`
       }
     ];
   }

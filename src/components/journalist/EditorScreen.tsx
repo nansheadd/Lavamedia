@@ -1,23 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { RichTextEditor, type EditorState, type EditorCalloutTone } from '@/components/editor';
 import { fetchFromApi } from '@/lib/auth-service';
+import { MOCK_CONTENT_ITEMS, type MockContentItem, type MockContentVersion } from '@/data/editor-mock';
 
-type ContentVersion = {
-  id: number;
-  version_number: number;
-  body: string;
-  diff?: Record<string, unknown> | null;
-};
-
-type ContentItem = {
-  id: number;
-  title: string;
-  slug: string;
-  updated_at?: string;
-  versions: ContentVersion[];
-};
+type ContentVersion = MockContentVersion;
+type ContentItem = MockContentItem;
 
 type PreparedState = {
   baseVersionId: number | null;
@@ -101,11 +91,43 @@ function prepareEditorState(content: ContentItem): PreparedState {
 }
 
 export function EditorScreen() {
+  const searchParams = useSearchParams();
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [selectedContentId, setSelectedContentId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastState, setLastState] = useState<EditorState | null>(null);
+  const [usingMockData, setUsingMockData] = useState(false);
+
+  const requestedContentId = useMemo(() => {
+    const param = searchParams.get('contentId');
+    if (!param) {
+      return null;
+    }
+    const parsed = Number(param);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [searchParams]);
+
+  const pickInitialContentId = useCallback((items: ContentItem[]) => {
+    if (items.length === 0) {
+      return null;
+    }
+    if (requestedContentId && items.some((item) => item.id === requestedContentId)) {
+      return requestedContentId;
+    }
+    return items[0].id;
+  }, [requestedContentId]);
+
+  const applyMockDataset = useCallback(() => {
+    if (MOCK_CONTENT_ITEMS.length === 0) {
+      return false;
+    }
+    setContents(MOCK_CONTENT_ITEMS);
+    setSelectedContentId(pickInitialContentId(MOCK_CONTENT_ITEMS));
+    setUsingMockData(true);
+    setError(null);
+    return true;
+  }, [pickInitialContentId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,22 +135,48 @@ export function EditorScreen() {
       setLoading(true);
       try {
         const response = await fetchFromApi('/api/content');
-        if (!response.ok) {
-          const message = await response.text();
-          throw new Error(message || 'Impossible de récupérer les contenus.');
+
+        if (response.status === 404) {
+          console.warn('API /content répond 404, bascule sur le mode démo.');
+          applyMockDataset();
+          return;
         }
+
+        if (!response.ok) {
+          let message = response.statusText || 'Impossible de récupérer les contenus.';
+          try {
+            const payload = await response.json();
+            if (payload && typeof payload === 'object') {
+              const detail = (payload as Record<string, unknown>).detail;
+              if (typeof detail === 'string' && detail.trim().length > 0) {
+                message = detail;
+              }
+            }
+          } catch {
+            // Ignore JSON parse errors and stick to the status text
+          }
+          throw new Error(message);
+        }
+
         const data = (await response.json()) as ContentItem[];
         if (cancelled) {
           return;
         }
-        setContents(data);
         if (data.length > 0) {
-          setSelectedContentId(data[0].id);
+          setContents(data);
+          setSelectedContentId(pickInitialContentId(data));
+          setUsingMockData(false);
+        } else {
+          applyMockDataset();
         }
         setError(null);
       } catch (cause) {
         if (!cancelled) {
-          setError((cause as Error).message);
+          console.warn('Échec du chargement des contenus live, utilisation d’un jeu de données local.', cause);
+          const hasMock = applyMockDataset();
+          if (!hasMock) {
+            setError((cause as Error).message);
+          }
         }
       } finally {
         if (!cancelled) {
@@ -141,14 +189,17 @@ export function EditorScreen() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyMockDataset, pickInitialContentId]);
 
   const selectedContent = useMemo(
     () => contents.find((content) => content.id === selectedContentId) ?? null,
     [contents, selectedContentId]
   );
 
-  const prepared = useMemo(() => (selectedContent ? prepareEditorState(selectedContent) : null), [selectedContent]);
+  const prepared = useMemo(
+    () => (selectedContent ? prepareEditorState(selectedContent) : null),
+    [selectedContent]
+  );
 
   if (loading) {
     return (
@@ -182,6 +233,12 @@ export function EditorScreen() {
 
   return (
     <div className="space-y-6">
+      {usingMockData ? (
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
+          Mode démo activé : les contenus affichés proviennent d’un jeu de données local (<strong>aucune sauvegarde n’est envoyée
+          au serveur</strong>). Lancez l’API FastAPI pour retrouver vos articles réels.
+        </div>
+      ) : null}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>

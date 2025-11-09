@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export const metadata = {
   title: 'Dashboard journaliste',
@@ -20,6 +22,14 @@ export default function JournalistDashboardPage() {
         title="Piloter vos contenus en un coup d’œil"
         description="Suivez la performance de vos articles, coordonnez l’équipe et publiez en toute sérénité."
       />
+      <div className="flex flex-wrap gap-3">
+        <Button asChild>
+          <Link href="/journalist/editeur">Ouvrir l’éditeur</Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link href="/journalist/brouillons">Créer un nouvel article</Link>
+        </Button>
+      </div>
       <div className="grid gap-6 md:grid-cols-3">
         {metrics.map((metric) => (
           <Card key={metric.label} className="bg-gradient-to-br from-primary-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">

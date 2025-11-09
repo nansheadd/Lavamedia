@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
-import type { Route } from 'next';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Bars3Icon } from '@heroicons/react/24/solid';
 import { Disclosure } from '@headlessui/react';
@@ -9,16 +9,25 @@ import clsx from 'clsx';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
 
-const navItems = [
+const baseNavItems: Array<{ href: string; label: string }> = [
   { href: '/', label: 'Accueil' },
   { href: '/rubriques', label: 'Rubriques' },
   { href: '/recherche', label: 'Recherche' },
   { href: '/newsletter', label: 'Newsletter' }
-] satisfies Array<{ href: Route; label: string }>;
+];
+
+const EDITORIAL_ROLES = new Set(['author', 'editor', 'admin']);
 
 export function MainNav() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const { user, logout, loading } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const activePath = mounted ? pathname : null;
 
   const dashboardHref = user
     ? user.primaryRole === 'admin'
@@ -27,6 +36,15 @@ export function MainNav() {
         ? '/journalist'
         : '/espace'
     : '/login';
+
+  const navItems =
+    mounted && user && EDITORIAL_ROLES.has(user.primaryRole)
+      ? [
+          ...baseNavItems,
+          { href: '/journalist/editeur', label: 'Studio' },
+          { href: '/journalist/brouillons', label: 'Brouillons' }
+        ]
+      : baseNavItems;
 
   return (
     <Disclosure as="header" className="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
@@ -44,7 +62,7 @@ export function MainNav() {
                     href={item.href}
                     className={clsx(
                       'rounded-full px-3 py-1 transition',
-                      pathname?.startsWith(item.href)
+                      activePath?.startsWith(item.href)
                         ? 'bg-primary-100 text-primary-700'
                         : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
                     )}
@@ -91,7 +109,7 @@ export function MainNav() {
                   href={item.href}
                   className={clsx(
                     'block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
-                    pathname?.startsWith(item.href) && 'bg-primary-100 text-primary-700'
+                    activePath?.startsWith(item.href) && 'bg-primary-100 text-primary-700'
                   )}
                 >
                   {item.label}
