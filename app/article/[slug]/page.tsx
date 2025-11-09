@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { articles } from '@/lib/mock-data';
+import type { ArticleSummary } from '@/types/content';
 import { buildMetadata } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/json-ld';
 import { articleJsonLd } from '@/lib/structured-data';
@@ -31,20 +32,54 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
   const article = articles.find((item) => item.slug === params.slug);
   if (!article) return notFound();
 
-  const getLocalizedArticles = (locale: Language) => {
+  type LocalizedArticle = Partial<ArticleSummary> & { slug?: string };
+
+  const getLocalizedArticles = (locale: Language): LocalizedArticle[] => {
     const bucket = translations[locale];
     if (bucket && typeof bucket === 'object') {
       const maybeArticles = (bucket as { articles?: unknown }).articles;
       if (Array.isArray(maybeArticles)) {
-        return maybeArticles as Array<{ slug: string } & Record<string, unknown>>;
+        return maybeArticles as LocalizedArticle[];
       }
     }
     return [];
   };
 
+  const buildArticleSummary = (locale: Language): ArticleSummary | undefined => {
+    if (locale === 'fr') {
+      return article;
+    }
+    const localized = getLocalizedArticles(locale).find((item) => item.slug === params.slug);
+    if (!localized) {
+      return undefined;
+    }
+
+    const pick = (value: unknown, fallback: string) =>
+      typeof value === 'string' && value.trim().length > 0 ? value : fallback;
+
+    return {
+      slug: article.slug,
+      title: pick(localized.title, article.title),
+      category: pick(localized.category, article.category),
+      categorySlug: pick(localized.categorySlug, article.categorySlug),
+      excerpt: pick(localized.excerpt, article.excerpt),
+      publishedAt: pick(localized.publishedAt, article.publishedAt),
+      author: pick(localized.author, article.author),
+      body: pick(localized.body, article.body),
+      heroImage:
+        typeof localized.heroImage === 'string' && localized.heroImage.trim().length > 0
+          ? localized.heroImage
+          : article.heroImage,
+      updatedAt:
+        typeof localized.updatedAt === 'string' && localized.updatedAt.trim().length > 0
+          ? localized.updatedAt
+          : article.updatedAt
+    };
+  };
+
   const articleByLanguage = {
-    fr: getLocalizedArticles('fr').find((item) => item.slug === params.slug),
-    nl: getLocalizedArticles('nl').find((item) => item.slug === params.slug)
+    fr: buildArticleSummary('fr'),
+    nl: buildArticleSummary('nl')
   };
 
   return (
