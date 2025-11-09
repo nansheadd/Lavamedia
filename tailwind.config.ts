@@ -46,9 +46,9 @@ const config: Config = {
       },
       keyframes: {
         pulse: {
-          '0%': { opacity: 1 },
-          '50%': { opacity: 0.65 },
-          '100%': { opacity: 1 }
+          '0%': { opacity: '1' },
+          '50%': { opacity: '0.65' },
+          '100%': { opacity: '1' }
         }
       }
     }
