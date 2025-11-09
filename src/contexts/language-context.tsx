@@ -72,7 +72,14 @@ export function useTranslations() {
   return t;
 }
 
-export function useTranslationList() {
+export function useTranslationList(): LanguageContextValue['list'];
+export function useTranslationList<T>(key: string): T;
+export function useTranslationList<T>(key?: string) {
   const { list } = useContext(LanguageContext);
+
+  if (typeof key === 'string') {
+    return list<T>(key);
+  }
+
   return list;
 }
