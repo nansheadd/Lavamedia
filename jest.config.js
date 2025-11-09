@@ -10,7 +10,8 @@ const customJestConfig = {
   moduleNameMapper: {
     '^@/components/(.*)$': '<rootDir>/src/components/$1',
     '^@/lib/(.*)$': '<rootDir>/src/lib/$1',
-    '^@/contexts/(.*)$': '<rootDir>/src/contexts/$1'
+    '^@/contexts/(.*)$': '<rootDir>/src/contexts/$1',
+    '^@/i18n/(.*)$': '<rootDir>/src/i18n/$1'
   }
 };
 
