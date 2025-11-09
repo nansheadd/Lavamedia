@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FC, type FormEvent } from 'react';
 
-import { createChangeRequest, decideChangeRequest, exportDocx, fetchChangeRequests } from './api';
+import { createChangeRequest, decideChangeRequest, exportDocx, exportPdf, fetchChangeRequests } from './api';
 import { LivePreview } from './LivePreview';
 import { TrackChangesPanel } from './TrackChangesPanel';
 import { useEditorState } from './state';
@@ -12,11 +12,15 @@ import type {
   EditorChangeRecord,
   EditorCalloutTone,
   EditorCallout,
-  EditorLead
+  EditorLead,
+  EditorBlock
 } from './types';
 import { FootnoteModule } from './modules/FootnoteModule';
 import { CalloutModule } from './modules/CalloutModule';
 import { ImageLeadModule } from './modules/ImageLeadModule';
+import { BlockComposer } from './modules/BlockComposer';
+import { SpellcheckPanel } from './modules/SpellcheckPanel';
+import { WorkflowPanel } from './modules/WorkflowPanel';
 
 interface RichTextEditorProps {
   contentId: number;
@@ -51,10 +55,12 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
   const [changeRequests, setChangeRequests] = useState<ChangeRequestDTO[]>([]);
   const [loadingChanges, setLoadingChanges] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [changeSummary, setChangeSummary] = useState('');
   const [changeComment, setChangeComment] = useState('');
   const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [previewViewport, setPreviewViewport] = useState<'desktop' | 'mobile'>('desktop');
 
   const loadChangeRequests = useCallback(async () => {
     if (!contentId) {
@@ -91,12 +97,83 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
     [serverChangeRecords, state.changes]
   );
 
+  const spellcheckSource = useMemo(() => {
+    const blockText = state.blocks
+      .map((block) => {
+        if (block.type === 'text') {
+          return block.content;
+        }
+        if (block.type === 'list') {
+          return block.items.join('\n');
+        }
+        if (block.type === 'image') {
+          return `${block.caption ?? ''} ${block.credit ?? ''}`.trim();
+        }
+        if (block.type === 'gallery') {
+          return block.images.map((image) => `${image.caption ?? ''} ${image.credit ?? ''}`.trim()).join('\n');
+        }
+        if (block.type === 'video') {
+          return `${block.title ?? ''}`;
+        }
+        if (block.type === 'audio') {
+          return `${block.title ?? ''}\n${block.transcript ?? ''}`;
+        }
+        return '';
+      })
+      .filter(Boolean)
+      .join('\n');
+    const calloutText = state.callouts
+      .map((callout) => `${callout.title}\n${callout.body}`)
+      .join('\n');
+    const footnoteText = state.footnotes.map((note) => note.content).join('\n');
+    return [state.title, state.chapeau, blockText, calloutText, footnoteText]
+      .filter(Boolean)
+      .join('\n\n');
+  }, [state]);
+
   const handleFootnoteAdd = (content: string) =>
     dispatch({ type: 'addFootnote', content, summary: 'Note ajoutée', payload: { content } });
   const handleFootnoteUpdate = (id: string, content: string) =>
     dispatch({ type: 'updateFootnote', id, content, summary: 'Note modifiée', payload: { id } });
   const handleFootnoteRemove = (id: string) =>
     dispatch({ type: 'removeFootnote', id, summary: 'Note supprimée', payload: { id } });
+  const handleBlockInsert = useCallback(
+    (block: EditorBlock, position?: number) =>
+      dispatch({
+        type: 'addBlock',
+        block,
+        position,
+        summary: 'Bloc ajouté',
+        payload: { type: block.type, position }
+      }),
+    [dispatch]
+  );
+  const handleBlockUpdate = useCallback(
+    (id: string, patch: Partial<EditorBlock>) =>
+      dispatch({
+        type: 'updateBlock',
+        id,
+        patch,
+        summary: 'Bloc mis à jour',
+        payload: { id, keys: Object.keys(patch ?? {}) }
+      }),
+    [dispatch]
+  );
+  const handleBlockRemove = useCallback(
+    (id: string) =>
+      dispatch({ type: 'removeBlock', id, summary: 'Bloc supprimé', payload: { id } }),
+    [dispatch]
+  );
+  const handleBlockMove = useCallback(
+    (id: string, direction: 'up' | 'down' | 'top' | 'bottom') =>
+      dispatch({ type: 'moveBlock', id, direction, summary: 'Bloc réorganisé', payload: { id, direction } }),
+    [dispatch]
+  );
+  const handleBlockDuplicate = useCallback(
+    (id: string) =>
+      dispatch({ type: 'duplicateBlock', id, summary: 'Bloc dupliqué', payload: { id } }),
+    [dispatch]
+  );
   const handleCalloutAdd = (tone: EditorCalloutTone) =>
     dispatch({ type: 'addCallout', tone, summary: 'Encadré ajouté', payload: { tone } });
   const handleCalloutUpdate = (id: string, data: Partial<EditorCallout>) =>
@@ -149,8 +226,8 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
     [baseVersionId, changeComment, changeSummary, contentId, loadChangeRequests, state]
   );
 
-  const handleExport = useCallback(async () => {
-    setIsExporting(true);
+  const handleExportDocx = useCallback(async () => {
+    setIsExportingDocx(true);
     setFeedback({ type: 'info', message: 'Génération du fichier Word…' });
     try {
       const blob = await exportDocx(contentId);
@@ -165,7 +242,27 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
     } catch (error) {
       setFeedback({ type: 'error', message: (error as Error).message });
     } finally {
-      setIsExporting(false);
+      setIsExportingDocx(false);
+    }
+  }, [contentId, state.title]);
+
+  const handleExportPdf = useCallback(async () => {
+    setIsExportingPdf(true);
+    setFeedback({ type: 'info', message: 'Génération du PDF…' });
+    try {
+      const blob = await exportPdf(contentId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const baseName = state.title ? state.title.replace(/\s+/g, '-') : `article-${contentId}`;
+      link.href = url;
+      link.download = `${baseName}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setFeedback({ type: 'success', message: 'Export PDF prêt à partager.' });
+    } catch (error) {
+      setFeedback({ type: 'error', message: (error as Error).message });
+    } finally {
+      setIsExportingPdf(false);
     }
   }, [contentId, state.title]);
 
@@ -214,14 +311,24 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
           >
             {state.trackChangesEnabled ? 'Suivi actif' : 'Activer le suivi'}
           </button>
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={isExporting}
-            className="rounded-full bg-primary-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-sm transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isExporting ? 'Export…' : 'Exporter (.docx)'}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleExportDocx}
+              disabled={isExportingDocx}
+              className="rounded-full bg-primary-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-sm transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isExportingDocx ? 'Export…' : 'Exporter (.docx)'}
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              disabled={isExportingPdf}
+              className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isExportingPdf ? 'PDF…' : 'Exporter (.pdf)'}
+            </button>
+          </div>
         </div>
       </div>
       {feedback && (
@@ -279,23 +386,17 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
                   className="editor-textarea"
                 />
               </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-600">
-                Corps de l’article
-                <textarea
-                  value={state.body}
-                  onChange={(event) =>
-                    dispatch({
-                      type: 'setBody',
-                      value: event.target.value,
-                      summary: 'Corps mis à jour',
-                      payload: { characters: event.target.value.length }
-                    })
-                  }
-                  className="editor-textarea min-h-[18rem]"
-                />
-              </label>
             </div>
           </section>
+          <BlockComposer
+            blocks={state.blocks}
+            footnotes={state.footnotes}
+            onInsert={handleBlockInsert}
+            onUpdate={handleBlockUpdate}
+            onRemove={handleBlockRemove}
+            onMove={handleBlockMove}
+            onDuplicate={handleBlockDuplicate}
+          />
           <ImageLeadModule lead={state.lead} onChange={handleLeadChange} />
           <CalloutModule
             callouts={state.callouts}
@@ -309,6 +410,8 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
             onUpdate={handleFootnoteUpdate}
             onRemove={handleFootnoteRemove}
           />
+          <SpellcheckPanel text={spellcheckSource} />
+          <WorkflowPanel changes={combinedChanges} />
           <section className="editor-section" aria-label="Soumission de proposition">
             <form className="space-y-5" onSubmit={handleChangeRequestSubmit}>
               <div className="grid gap-4 md:grid-cols-2">
@@ -340,7 +443,31 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
               </button>
             </form>
           </section>
-          <LivePreview state={state} />
+          <div className="flex justify-end gap-2 pb-4">
+            <button
+              type="button"
+              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                previewViewport === 'desktop'
+                  ? 'bg-primary-600 text-white'
+                  : 'border border-slate-200 text-slate-600'
+              }`}
+              onClick={() => setPreviewViewport('desktop')}
+            >
+              Desktop
+            </button>
+            <button
+              type="button"
+              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                previewViewport === 'mobile'
+                  ? 'bg-primary-600 text-white'
+                  : 'border border-slate-200 text-slate-600'
+              }`}
+              onClick={() => setPreviewViewport('mobile')}
+            >
+              Mobile
+            </button>
+          </div>
+          <LivePreview state={state} viewport={previewViewport} />
         </div>
         <TrackChangesPanel
           changes={combinedChanges}

@@ -79,3 +79,15 @@ export async function exportDocx(contentId: number): Promise<Blob> {
   }
   return await response.blob();
 }
+
+export async function exportPdf(contentId: number): Promise<Blob> {
+  const response = await fetch(`${baseUrl}/content/${contentId}/export/pdf`, {
+    method: 'POST',
+    headers: buildAuthHeaders()
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || "Impossible d'exporter le PDF");
+  }
+  return await response.blob();
+}
