@@ -1,3 +1,4 @@
+import { getAccessToken } from '@/lib/auth-service';
 import type {
   ChangeRequestDecisionPayload,
   ChangeRequestDTO,
@@ -6,10 +7,28 @@ import type {
 
 const baseUrl = '/api/editorial';
 
+function buildAuthHeaders(existing?: HeadersInit): Headers {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('Votre session a expiré. Veuillez vous reconnecter pour continuer.');
+  }
+
+  const headers = new Headers(existing ?? undefined);
+  headers.set('Authorization', `Bearer ${token}`);
+  return headers;
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(message || 'Une erreur est survenue.');
+    const fallback = message || 'Une erreur est survenue.';
+    if (response.status === 401) {
+      throw new Error('Authentification requise pour cette opération.');
+    }
+    if (response.status === 403) {
+      throw new Error("Vous n'avez pas les droits suffisants pour cette action.");
+    }
+    throw new Error(fallback);
   }
   if (response.status === 204) {
     return undefined as T;
@@ -18,7 +37,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export async function fetchChangeRequests(contentId: number): Promise<ChangeRequestDTO[]> {
-  const response = await fetch(`${baseUrl}/content/${contentId}/changes`);
+  const response = await fetch(`${baseUrl}/content/${contentId}/changes`, {
+    headers: buildAuthHeaders()
+  });
   return handleResponse<ChangeRequestDTO[]>(response);
 }
 
@@ -28,7 +49,7 @@ export async function createChangeRequest(
 ): Promise<ChangeRequestDTO> {
   const response = await fetch(`${baseUrl}/content/${contentId}/changes`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload)
   });
   return handleResponse<ChangeRequestDTO>(response);
@@ -41,7 +62,7 @@ export async function decideChangeRequest(
 ): Promise<ChangeRequestDTO> {
   const response = await fetch(`${baseUrl}/content/${contentId}/changes/${changeId}/decision`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload)
   });
   return handleResponse<ChangeRequestDTO>(response);
@@ -49,7 +70,8 @@ export async function decideChangeRequest(
 
 export async function exportDocx(contentId: number): Promise<Blob> {
   const response = await fetch(`${baseUrl}/content/${contentId}/export/docx`, {
-    method: 'POST'
+    method: 'POST',
+    headers: buildAuthHeaders()
   });
   if (!response.ok) {
     const message = await response.text();

@@ -75,6 +75,12 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({
     void loadChangeRequests();
   }, [loadChangeRequests]);
 
+  useEffect(() => {
+    if (initialState) {
+      dispatch({ type: 'hydrate', state: initialState });
+    }
+  }, [dispatch, initialState]);
+
   const serverChangeRecords = useMemo(
     () => changeRequests.map(toChangeRecord),
     [changeRequests]
