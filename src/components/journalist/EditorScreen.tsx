@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { RichTextEditor, type EditorState, type EditorCalloutTone } from '@/components/editor';
 import { fetchFromApi } from '@/lib/auth-service';
 import { MOCK_CONTENT_ITEMS, type MockContentItem, type MockContentVersion } from '@/data/editor-mock';
+import { useLanguage, useTranslations } from '@/contexts/language-context';
 
 type ContentVersion = MockContentVersion;
 type ContentItem = MockContentItem;
@@ -98,6 +99,8 @@ export function EditorScreen() {
   const [error, setError] = useState<string | null>(null);
   const [lastState, setLastState] = useState<EditorState | null>(null);
   const [usingMockData, setUsingMockData] = useState(false);
+  const t = useTranslations();
+  const { language } = useLanguage();
 
   const requestedContentId = useMemo(() => {
     const param = searchParams.get('contentId');
@@ -204,7 +207,7 @@ export function EditorScreen() {
   if (loading) {
     return (
       <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-        Chargement du studio éditorial…
+        {t('editor.loading')}
       </div>
     );
   }
@@ -216,8 +219,7 @@ export function EditorScreen() {
           {error}
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Assurez-vous que l’API FastAPI est démarrée sur <code className="font-mono">http://localhost:8000</code> et que votre
-          compte dispose des droits journaliste ou éditeur.
+          <span dangerouslySetInnerHTML={{ __html: t('editor.connectionHint') }} />
         </p>
       </div>
     );
@@ -226,7 +228,7 @@ export function EditorScreen() {
   if (!prepared || prepared.baseVersionId === null || !selectedContent) {
     return (
       <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-        Aucun contenu disponible pour l’instant. Créez un article dans le back-office pour activer le studio éditorial.
+        {t('editor.empty')}
       </div>
     );
   }
@@ -235,30 +237,29 @@ export function EditorScreen() {
     <div className="space-y-6">
       {usingMockData ? (
         <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
-          Mode démo activé : les contenus affichés proviennent d’un jeu de données local (<strong>aucune sauvegarde n’est envoyée
-          au serveur</strong>). Lancez l’API FastAPI pour retrouver vos articles réels.
+          <span dangerouslySetInnerHTML={{ __html: t('editor.demo') }} />
         </div>
       ) : null}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Sélection du contenu
+              {t('editor.selectionEyebrow')}
             </p>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{selectedContent.title}</h2>
             {selectedContent.updated_at ? (
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Dernière mise à jour : {new Date(selectedContent.updated_at).toLocaleString('fr-FR')}
+                {t('editor.lastUpdate', { date: new Date(selectedContent.updated_at).toLocaleString(language === 'nl' ? 'nl-NL' : 'fr-FR') })}
               </p>
             ) : null}
             {lastState ? (
               <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                Suivi actif — {lastState.changes.length} modification(s) locale(s) en attente
+                {t('editor.tracking', { count: lastState.changes.length })}
               </p>
             ) : null}
           </div>
           <label className="flex flex-col gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 md:w-72">
-            Choisir un autre article
+            {t('editor.chooseAnother')}
             <select
               value={selectedContentId ?? ''}
               onChange={(event) => {

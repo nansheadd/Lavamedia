@@ -4,13 +4,11 @@ import { useRouter } from 'next/navigation';
 import { FormEvent, useId, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { getAccessToken } from '@/lib/auth-service';
+import { useTranslations } from '@/contexts/language-context';
 
 type ApiContent = {
   id: number;
 };
-
-const DEFAULT_BODY =
-  'Commencez votre article ici. Vous pourrez enrichir le texte, ajouter des médias et structurer vos parties dans le studio.';
 
 function normalizeSlug(source: string) {
   const base = source
@@ -31,6 +29,8 @@ export function CreateArticleForm() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const uniqueSuffix = useId().replace(/[^a-z0-9]/gi, '').slice(-4);
+  const t = useTranslations();
+  const defaultBody = t('createArticle.defaultBody');
   const slugPreview = useMemo(() => {
     const normalized = normalizeSlug(title || 'nouvel-article');
     const suffix = uniqueSuffix || 'auto';
@@ -41,12 +41,12 @@ export function CreateArticleForm() {
     event.preventDefault();
     setError(null);
     if (!title.trim()) {
-      setError('Indiquez un titre pour votre article.');
+      setError(t('createArticle.errors.title'));
       return;
     }
     const token = getAccessToken();
     if (!token) {
-      setError('Vous devez être connecté pour créer un article.');
+      setError(t('createArticle.errors.auth'));
       return;
     }
 
@@ -62,7 +62,7 @@ export function CreateArticleForm() {
           type,
           title: title.trim(),
           slug: slugPreview,
-          body: body.trim() || DEFAULT_BODY,
+          body: body.trim() || defaultBody,
           status: 'draft',
           workflow_state: 'draft',
           category_ids: [],
@@ -75,7 +75,7 @@ export function CreateArticleForm() {
         const message =
           (payload && typeof payload === 'object' && typeof payload.detail === 'string'
             ? payload.detail
-            : response.statusText) || 'Impossible de créer l’article.';
+            : response.statusText) || t('editor.fallbackError');
         throw new Error(message);
       }
 
@@ -93,39 +93,41 @@ export function CreateArticleForm() {
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            Titre de l’article
+            {t('createArticle.title')}
             <input
               type="text"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               className="mt-1 w-full rounded-2xl border border-slate-300 px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              placeholder="Ex. : Comment réinventer la couverture locale ?"
+              placeholder={t('createArticle.placeholder')}
               required
             />
           </label>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Slug provisoire : {slugPreview}</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {t('createArticle.slugPreview', { slug: slugPreview })}
+          </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            Format
+            {t('createArticle.format')}
             <select
               value={type}
               onChange={(event) => setType(event.target.value as typeof type)}
               className="mt-1 w-full rounded-2xl border border-slate-300 px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             >
-              <option value="article">Article</option>
-              <option value="reportage">Reportage</option>
-              <option value="podcast">Podcast</option>
+              <option value="article">{t('createArticle.formats.article')}</option>
+              <option value="reportage">{t('createArticle.formats.reportage')}</option>
+              <option value="podcast">{t('createArticle.formats.podcast')}</option>
             </select>
           </label>
           <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-            Résumé (optionnel)
+            {t('createArticle.summary')}
             <input
               type="text"
               value={body}
               onChange={(event) => setBody(event.target.value)}
               className="mt-1 w-full rounded-2xl border border-slate-300 px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              placeholder="Un aperçu en 2 phrases. Le contenu détaillé sera rédigé dans l’éditeur."
+              placeholder={t('createArticle.summaryPlaceholder')}
             />
           </label>
         </div>
@@ -136,10 +138,10 @@ export function CreateArticleForm() {
         ) : null}
         <div className="flex flex-wrap gap-3">
           <Button type="submit" disabled={creating}>
-            {creating ? 'Création en cours…' : 'Créer et ouvrir dans l’éditeur'}
+            {creating ? t('createArticle.submitting') : t('createArticle.submit')}
           </Button>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            L’article sera enregistré en brouillon et visible uniquement depuis votre espace.
+            {t('createArticle.note')}
           </p>
         </div>
       </form>
