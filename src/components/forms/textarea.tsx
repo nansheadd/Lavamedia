@@ -25,7 +25,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, Props>(
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : hint ? hintId : undefined}
           className={clsx(
-            'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900',
+            'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white',
             className
           )}
           {...props}

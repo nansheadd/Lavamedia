@@ -23,7 +23,8 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: ALLOWED_ORIGINS
-        value: https://your-frontend-domain
+        value: |
+          ["https://lavamedia-frontend.onrender.com"]
   - type: web
     name: lavamedia-frontend
     env: node
