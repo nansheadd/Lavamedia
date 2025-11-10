@@ -38,7 +38,7 @@ services:
       - key: NODE_VERSION
         value: "20"
       - key: NEXT_PUBLIC_API_URL
-        value: https://lavamedia-backend.onrender.com
+        value: https://lavamedia-backend.onrender.com/api
 databases:
   - name: lavamedia-db
     plan: free
