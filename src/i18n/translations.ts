@@ -36,7 +36,8 @@ export const translations: Record<Language, TranslationRecord> = {
         { href: '/', label: 'Accueil' },
         { href: '/rubriques', label: 'Rubriques' },
         { href: '/recherche', label: 'Recherche' },
-        { href: '/newsletter', label: 'Newsletter' }
+        { href: '/newsletter', label: 'Newsletter' },
+        { href: '/abonnement', label: 'Abonnements' }
       ],
       studioItems: [
         { href: '/journalist/editeur', label: 'Studio' },
@@ -83,6 +84,11 @@ export const translations: Record<Language, TranslationRecord> = {
         title: 'Les récits qui transforment la presse',
         description: 'Notre rédaction expérimente de nouveaux formats pour décrypter les enjeux contemporains.'
       },
+      subscriptions: {
+        eyebrow: 'Abonnements',
+        title: 'Passez au Print + Digital en quelques clics',
+        description: 'Choisissez un paiement mensuel (engagement 3 mois) ou annuel selon votre rythme.'
+      },
       community: {
         eyebrow: 'Community first',
         title: 'Des ressources pour grandir avec votre audience',
@@ -108,6 +114,141 @@ export const translations: Record<Language, TranslationRecord> = {
       loading: 'Inscription…',
       success: 'Merci ! Vous êtes bien inscrit·e à notre newsletter.',
       error: 'Une erreur est survenue, veuillez réessayer.'
+    },
+    subscriptions: {
+      eyebrow: 'Abonnements',
+      title: 'Soutenez une presse indépendante',
+      description: 'Choisissez Print + Digital ou 100% numérique, et basculez librement entre paiement mensuel (engagement 3 mois) ou facturation annuelle.',
+      longDescription: 'Nos formules réunissent les 4 numéros imprimés de l’année, l’accès illimité aux archives et un accompagnement personnalisé. Chaque abonnement finance directement l’indépendance de la rédaction.',
+      stickyTitle: 'Livraison, accès illimité et support premium',
+      stickyDescription: 'La team abonnement suit vos paiements, gère les changements d’adresse et vous envoie une alerte en cas de problème de carte bancaire.',
+      highlights: [
+        {
+          title: 'Expédition en Europe',
+          description: 'Vos numéros papier sont expédiés depuis Bruxelles avec suivi et packaging recyclable.'
+        },
+        {
+          title: 'Accès instantané au digital',
+          description: 'Dès l’abonnement activé, vous débloquez toutes les archives et dossiers spéciaux.'
+        },
+        {
+          title: 'Support humain',
+          description: 'Un membre de l’équipe répond sous 24h aux questions de facturation ou problèmes Stripe.'
+        }
+      ],
+      intervals: {
+        monthly: { label: 'Mensuel', helper: 'Engagement 3 mois' },
+        annual: { label: 'Annuel', helper: 'Facturation unique' }
+      },
+      periodSuffix: {
+        monthly: '/mois',
+        annual: '/an'
+      },
+      labels: {
+        popular: 'Best-seller',
+        support: 'Solidarité',
+        forthcoming: 'Tarif à venir',
+        monthlyFallback: 'Mensuel',
+        annualFallback: 'Annuel',
+        intervalHelperFallback: 'Choix libre',
+        formTitleFallback: 'Créer votre compte',
+        formDescriptionFallback: 'Validez vos informations pour accéder au paiement sécurisé.',
+        existingAccountHintFallback: 'Vous avez déjà un compte ? Réutilisez vos identifiants.',
+        submitFallback: 'Continuer vers Stripe',
+        missingFieldsFallback: 'Merci de saisir votre e-mail et un mot de passe.',
+        genericErrorFallback: 'Impossible de préparer la session Stripe.',
+        fullNameFallback: 'Nom complet (optionnel)',
+        emailFallback: 'Adresse e-mail',
+        passwordFallback: 'Mot de passe'
+      },
+      form: {
+        title: 'Créer ou réactiver votre compte',
+        description: 'Nous créons votre compte lecteur avant de vous rediriger vers Stripe.',
+        existingAccountHint: 'Si vous possédez déjà un compte, entrez le même e-mail et mot de passe : nous vous reconnecterons automatiquement.',
+        fields: {
+          fullName: 'Nom complet (optionnel)',
+          email: 'Adresse e-mail',
+          password: 'Mot de passe'
+        },
+        submit: 'Passer au paiement sécurisé',
+        errors: {
+          missingFields: 'Merci de renseigner votre e-mail et un mot de passe pour créer le compte.',
+          generic: 'Impossible de créer la session Stripe pour le moment.'
+        }
+      },
+      status: {
+        alreadyActive: 'Vous disposez déjà d’un abonnement actif.',
+        manage: 'Ouvrir mon espace'
+      },
+      errors: {
+        planUnavailable: 'Selectionnez une formule pour continuer.'
+      },
+      connectedAs: 'Connecté en tant que {email}',
+      loading: 'Préparation…',
+      plans: [
+        {
+          slug: 'classic',
+          badge: 'Print + Digital',
+          name: 'Classique',
+          tagline: 'La formule la plus plébiscitée, équilibrant papier et accès illimité.',
+          description: 'Recevez 4 numéros par an chez vous et débloquez instantanément toutes les archives digitales.',
+          bestFor: 'Pour les passionnés de print',
+          highlight: 'popular',
+          includesPrint: true,
+          defaultInterval: 'monthly',
+          features: [
+            '4 numéros imprimés par an, livraison incluse',
+            'Accès complet aux archives et dossiers long format',
+            'Usage multi-écran (mobile, tablette et desktop)',
+            'Support prioritaire en cas de problème de paiement'
+          ],
+          prices: {
+            monthly: { amount: 4.5, currency: 'EUR', note: 'Engagement 3 mois minimum' },
+            annual: { amount: 50, currency: 'EUR', note: 'Facturation en un versement' }
+          }
+        },
+        {
+          slug: 'digital',
+          badge: 'Digital',
+          name: 'Digital',
+          tagline: 'Accès illimité à tous les articles, dossiers et archives audio.',
+          description: 'Pensée pour les lecteurs nomades qui privilégient le numérique tout en soutenant la rédaction.',
+          bestFor: 'Pour les lecteurs nomades',
+          includesPrint: false,
+          defaultInterval: 'annual',
+          features: [
+            'Accès illimité à tous les numéros numériques',
+            'Lecture hors-ligne dans l’espace lecteur',
+            'Newsletter privée avec briefs éditoriaux',
+            'Alertes dès la publication des nouveaux numéros'
+          ],
+          prices: {
+            monthly: { amount: 3, currency: 'EUR', note: 'Débit mensuel, engagement 3 mois' },
+            annual: { amount: 30, currency: 'EUR', note: 'Économie de 20% vs mensuel' }
+          }
+        },
+        {
+          slug: 'supporter',
+          badge: 'Hauts revenus',
+          name: 'Hauts revenus',
+          tagline: 'Pour celles et ceux qui souhaitent financer davantage de reportages.',
+          description: 'Vous recevez le print + digital et contribuez au financement des enquêtes longues.',
+          bestFor: 'Pour les alliés de la rédaction',
+          highlight: 'support',
+          includesPrint: true,
+          defaultInterval: 'annual',
+          features: [
+            '4 numéros imprimés et accès digital illimité',
+            'Invitation aux débriefs trimestriels avec la rédaction',
+            'Badge soutien affiché dans votre espace lecteur',
+            'Kit de bienvenue sérigraphié par nos illustrateurs'
+          ],
+          prices: {
+            monthly: { amount: 7.5, currency: 'EUR', note: 'Paiement mensuel flexible' },
+            annual: { amount: 85, currency: 'EUR', note: 'Contribution directe au fonds reportage' }
+          }
+        }
+      ]
     },
     rubriques: {
       eyebrow: 'Rubriques',
@@ -309,6 +450,35 @@ export const translations: Record<Language, TranslationRecord> = {
       subscriptions: {
         title: 'Abonnements',
         description: 'Visualisez les statuts par segment et intervenez par rôle ou par utilisateur.',
+        refresh: 'Actualiser les données Stripe',
+        loading: 'Synchronisation…',
+        error: 'Impossible de récupérer les abonnements live.',
+        liveFeedTitle: 'Derniers abonnements et incidents',
+        empty: 'Aucun abonnement enregistré pour l’instant.',
+        nextCharge: 'Prochain prélèvement : {date}',
+        metrics: {
+          total: 'Comptes suivis',
+          active: 'Actifs',
+          pastDue: 'En retard',
+          issues: 'Alertes'
+        },
+        planLabels: {
+          classic: 'Classique',
+          digital: 'Digital',
+          supporter: 'Hauts revenus'
+        },
+        intervalLabels: {
+          monthly: 'Mensuel',
+          annual: 'Annuel'
+        },
+        statusLabels: {
+          active: 'Actif',
+          trialing: 'Période d’essai',
+          past_due: 'Paiement en retard',
+          canceled: 'Résilié',
+          unpaid: 'Impayé',
+          incomplete: 'Incomplet'
+        },
         cta: 'Voir toutes les fiches abonnés',
         highlightsTitle: 'Actions récentes par rôle',
         segments: [
@@ -570,7 +740,8 @@ export const translations: Record<Language, TranslationRecord> = {
         { href: '/', label: 'Home' },
         { href: '/rubriques', label: 'Rubrieken' },
         { href: '/recherche', label: 'Zoeken' },
-        { href: '/newsletter', label: 'Nieuwsbrief' }
+        { href: '/newsletter', label: 'Nieuwsbrief' },
+        { href: '/abonnement', label: 'Abonnementen' }
       ],
       studioItems: [
         { href: '/journalist/editeur', label: 'Studio' },
@@ -617,6 +788,11 @@ export const translations: Record<Language, TranslationRecord> = {
         title: 'Verhalen die de pers transformeren',
         description: 'Onze redactie experimenteert met nieuwe formats om actuele vraagstukken te duiden.'
       },
+      subscriptions: {
+        eyebrow: 'Abonnementen',
+        title: 'Schakel in één klik tussen print en digitaal',
+        description: 'Kies voor maandelijkse betalingen (met 3 maanden engagement) of een jaarlijkse factuur.'
+      },
       community: {
         eyebrow: 'Community first',
         title: 'Resources om met uw publiek te groeien',
@@ -642,6 +818,141 @@ export const translations: Record<Language, TranslationRecord> = {
       loading: 'Inschrijven…',
       success: 'Bedankt! U bent ingeschreven op onze nieuwsbrief.',
       error: 'Er is een fout opgetreden. Probeer het opnieuw.'
+    },
+    subscriptions: {
+      eyebrow: 'Abonnementen',
+      title: 'Steun een onafhankelijke redactie',
+      description: 'Kies voor Print + Digitaal of 100% digitaal en wissel tussen maandelijkse betalingen (3 maanden engagement) of een jaarlijkse factuur.',
+      longDescription: 'Onze formules combineren vier papieren nummers per jaar, onbeperkte toegang tot het digitale archief en toegewijde opvolging door het abonnements­t eam. Elke bijdrage financiert rechtstreeks ons onderzoekswerk.',
+      stickyTitle: 'Levering, onbeperkt lezen en premium support',
+      stickyDescription: 'Het abonnementsteam volgt uw betalingen op, beheert adreswijzigingen en contacteert u wanneer Stripe een kaart weigert.',
+      highlights: [
+        {
+          title: 'Verzending vanuit Brussel',
+          description: 'De papieren edities vertrekken vanuit Brussel met tracking en recycleerbare verpakking.'
+        },
+        {
+          title: 'Onmiddellijke digitale toegang',
+          description: 'Van zodra het abonnement actief is krijgt u toegang tot alle dossiers, podcasts en archieven.'
+        },
+        {
+          title: 'Menselijke helpdesk',
+          description: 'Binnen 24 uur antwoord op facturatievragen of problemen met uw betaalkaart.'
+        }
+      ],
+      intervals: {
+        monthly: { label: 'Maandelijks', helper: '3 maanden engagement' },
+        annual: { label: 'Jaarlijks', helper: 'Eén factuur' }
+      },
+      periodSuffix: {
+        monthly: '/maand',
+        annual: '/jaar'
+      },
+      labels: {
+        popular: 'Populairst',
+        support: 'Solidariteit',
+        forthcoming: 'Tarief binnenkort',
+        monthlyFallback: 'Maandelijks',
+        annualFallback: 'Jaarlijks',
+        intervalHelperFallback: 'Vrij kiezen',
+        formTitleFallback: 'Account aanmaken',
+        formDescriptionFallback: 'Vul uw gegevens in om naar Stripe te gaan.',
+        existingAccountHintFallback: 'Al klant? Gebruik uw bestaande inloggegevens.',
+        submitFallback: 'Verder naar Stripe',
+        missingFieldsFallback: 'Vul minstens e-mail en wachtwoord in.',
+        genericErrorFallback: 'Stripe-sessie kon niet worden voorbereid.',
+        fullNameFallback: 'Volledige naam (optioneel)',
+        emailFallback: 'E-mailadres',
+        passwordFallback: 'Wachtwoord'
+      },
+      form: {
+        title: 'Maak of heractiveer uw account',
+        description: 'We maken eerst uw lezersaccount aan vooraleer u naar Stripe gaat.',
+        existingAccountHint: 'Gebruikt u al een account? Vul hetzelfde e-mailadres en wachtwoord in en we melden u automatisch aan.',
+        fields: {
+          fullName: 'Volledige naam (optioneel)',
+          email: 'E-mailadres',
+          password: 'Wachtwoord'
+        },
+        submit: 'Ga naar beveiligde betaling',
+        errors: {
+          missingFields: 'Vul minstens uw e-mail en een wachtwoord in om een account te maken.',
+          generic: 'Het Stripe-betalingsvenster kon niet worden geopend.'
+        }
+      },
+      status: {
+        alreadyActive: 'U hebt al een actief abonnement.',
+        manage: 'Open mijn ruimte'
+      },
+      errors: {
+        planUnavailable: 'Kies een formule om verder te gaan.'
+      },
+      connectedAs: 'Aangemeld als {email}',
+      loading: 'Voorbereiden…',
+      plans: [
+        {
+          slug: 'classic',
+          badge: 'Print + Digitaal',
+          name: 'Klassiek',
+          tagline: 'De favoriete formule die papier en digitaal combineert.',
+          description: 'Ontvang vier papieren nummers per jaar en ontgrendel meteen alle digitale dossiers.',
+          bestFor: 'Voor fans van print',
+          highlight: 'popular',
+          includesPrint: true,
+          defaultInterval: 'monthly',
+          features: [
+            '4 gedrukte nummers per jaar, levering inbegrepen',
+            'Volledige toegang tot alle digitale dossiers',
+            'Lezen op smartphone, tablet en desktop',
+            'Prioritaire support bij betalingsproblemen'
+          ],
+          prices: {
+            monthly: { amount: 4.5, currency: 'EUR', note: 'Engagement van minstens 3 maanden' },
+            annual: { amount: 50, currency: 'EUR', note: 'Eén jaarlijkse betaling' }
+          }
+        },
+        {
+          slug: 'digital',
+          badge: 'Digitaal',
+          name: 'Digitaal',
+          tagline: 'Onbeperkte toegang tot alle artikels, podcasts en archieven.',
+          description: 'Ideaal voor lezers die vooral mobiel lezen maar wel onze redactie willen steunen.',
+          bestFor: 'Voor digitale lezers',
+          includesPrint: false,
+          defaultInterval: 'annual',
+          features: [
+            'Onbeperkt digitaal archief',
+            'Offline lezen in de lezerszone',
+            'Private nieuwsbrief met redactionele briefs',
+            'Meldingen bij elk nieuw nummer'
+          ],
+          prices: {
+            monthly: { amount: 3, currency: 'EUR', note: 'Maandelijkse betaling, 3 maanden engagement' },
+            annual: { amount: 30, currency: 'EUR', note: '20% voordeel t.o.v. maandelijks' }
+          }
+        },
+        {
+          slug: 'supporter',
+          badge: 'Hoge inkomens',
+          name: 'Hoge inkomens',
+          tagline: 'Voor wie extra wil bijdragen aan onderzoeksjournalistiek.',
+          description: 'U ontvangt print + digitaal en financiert tegelijk nieuwe onderzoeksprojecten.',
+          bestFor: 'Voor bondgenoten van de redactie',
+          highlight: 'support',
+          includesPrint: true,
+          defaultInterval: 'annual',
+          features: [
+            '4 gedrukte nummers en volledige digitale toegang',
+            'Uitnodiging op de kwartaal-debriefs met de redactie',
+            'Soutien-badge in uw lezersruimte',
+            'Welkomstpakket gezeefdrukt door onze illustratoren'
+          ],
+          prices: {
+            monthly: { amount: 7.5, currency: 'EUR', note: 'Flexibele maandelijkse betaling' },
+            annual: { amount: 85, currency: 'EUR', note: 'Rechtstreeks voor het onderzoeksfonds' }
+          }
+        }
+      ]
     },
     rubriques: {
       eyebrow: 'Rubrieken',
@@ -843,6 +1154,35 @@ export const translations: Record<Language, TranslationRecord> = {
       subscriptions: {
         title: 'Abonnementen',
         description: 'Bekijk de statussen per segment en stuur acties per rol of gebruiker.',
+        refresh: 'Stripe-data vernieuwen',
+        loading: 'Bezig met synchroniseren…',
+        error: 'Livegegevens konden niet worden opgehaald.',
+        liveFeedTitle: 'Laatste abonnementen en incidenten',
+        empty: 'Nog geen geregistreerde abonnementen.',
+        nextCharge: 'Volgende afschrijving: {date}',
+        metrics: {
+          total: 'Gevolgde accounts',
+          active: 'Actief',
+          pastDue: 'Achterstallig',
+          issues: 'Problemen'
+        },
+        planLabels: {
+          classic: 'Klassiek',
+          digital: 'Digitaal',
+          supporter: 'Hoge inkomens'
+        },
+        intervalLabels: {
+          monthly: 'Maandelijks',
+          annual: 'Jaarlijks'
+        },
+        statusLabels: {
+          active: 'Actief',
+          trialing: 'Proefperiode',
+          past_due: 'Te laat',
+          canceled: 'Beëindigd',
+          unpaid: 'Onbetaald',
+          incomplete: 'Onvolledig'
+        },
         cta: 'Alle abonnementsfiches openen',
         highlightsTitle: 'Recente acties per rol',
         segments: [

@@ -9,6 +9,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.api.routes import (
     analytics,
     auth,
+    billing,
     content,
     editorial,
     media,
@@ -42,6 +43,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(content.router, prefix="/api")
 app.include_router(media.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+app.include_router(billing.router, prefix="/api")
 app.include_router(newsletter.router, prefix="/api")
 app.include_router(seo.router, prefix="/api")
 app.include_router(notification.router, prefix="/api")

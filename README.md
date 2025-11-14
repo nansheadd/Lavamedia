@@ -130,3 +130,21 @@ Les identifiants suivants sont seedés automatiquement côté backend :
 - `contributeur@lava.com` / `password` → rôle contributeur
 - `abonne@lava.com` / `password` → rôle abonné
 - `client@lava.com` / `password` → rôle client
+
+## Abonnements Stripe
+
+Le site propose désormais une page dédiée (`/abonnement`) ainsi qu’un module sur la page d’accueil pour choisir une formule (Print + Digital, Digital ou Hauts revenus) avec passage instantané sur Stripe Checkout. Le backend expose `/api/billing/checkout` pour créer les sessions, `/api/billing/me` pour récupérer l’état de l’abonnement côté lecteur, un webhook `/api/billing/webhook` ainsi qu’un tableau de bord live dans `/admin`.
+
+### Variables d’environnement à renseigner
+
+Ajoutez les clés suivantes côté backend (`.env`, Render, etc.) :
+
+- `STRIPE_API_KEY` – clé secrète Stripe (test ou production).
+- `STRIPE_WEBHOOK_SECRET` – secret de signature pour le webhook lié à `/api/billing/webhook`.
+- `STRIPE_PRICE_CLASSIC_MONTHLY` / `STRIPE_PRICE_CLASSIC_ANNUAL` – IDs de prix pour la formule Classique.
+- `STRIPE_PRICE_DIGITAL_MONTHLY` / `STRIPE_PRICE_DIGITAL_ANNUAL` – IDs de prix pour la formule Digital (le mensuel peut rester vide si non utilisé).
+- `STRIPE_PRICE_SUPPORTER_MONTHLY` / `STRIPE_PRICE_SUPPORTER_ANNUAL` – IDs de prix pour la formule « Hauts revenus `.
+
+Le webhook vérifie la signature Stripe si `STRIPE_WEBHOOK_SECRET` est défini. Pensez à configurer Stripe CLI (`stripe listen --forward-to localhost:8000/api/billing/webhook`) en local pour tester la synchro. En production, exposez l’URL `/api/billing/webhook` dans le dashboard Stripe.
+
+Lorsque Stripe confirme un abonnement, l’utilisateur reçoit automatiquement le rôle `subscriber`. Si aucun abonnement actif n’est présent, le rôle est retiré afin de limiter l’accès aux contenus réservés.

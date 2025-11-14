@@ -9,6 +9,7 @@ import { JsonLd } from '@/components/seo/json-ld';
 import { homepageJsonLd } from '@/lib/structured-data';
 import { useTranslationList, useTranslations } from '@/contexts/language-context';
 import type { ArticleSummary } from '@/types/content';
+import { SubscriptionFlow } from '@/components/subscriptions/SubscriptionFlow';
 
 export function HomePageContent() {
   const t = useTranslations();
@@ -76,6 +77,16 @@ export function HomePageContent() {
               <ArticleCard key={article.slug} {...article} />
             ))}
           </div>
+        </Container>
+      </section>
+      <section className="border-t border-slate-200 bg-slate-50 py-16 dark:border-slate-800 dark:bg-slate-950/40">
+        <Container className="space-y-10">
+          <SectionHeading
+            eyebrow={t('home.subscriptions.eyebrow')}
+            title={t('home.subscriptions.title')}
+            description={t('home.subscriptions.description')}
+          />
+          <SubscriptionFlow />
         </Container>
       </section>
       <section className="py-16">

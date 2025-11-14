@@ -25,6 +25,22 @@ services:
       - key: ALLOWED_ORIGINS
         value: |
           ["https://lavamedia-frontend.onrender.com"]
+      - key: STRIPE_API_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_CLASSIC_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_CLASSIC_ANNUAL
+        sync: false
+      - key: STRIPE_PRICE_DIGITAL_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_DIGITAL_ANNUAL
+        sync: false
+      - key: STRIPE_PRICE_SUPPORTER_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_SUPPORTER_ANNUAL
+        sync: false
   - type: web
     name: lavamedia-frontend
     env: node

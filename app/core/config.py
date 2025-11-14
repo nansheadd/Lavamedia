@@ -72,6 +72,12 @@ class Settings(BaseSettings):
     search_api_key: str | None = None
     stripe_api_key: str | None = None
     stripe_webhook_secret: str | None = None
+    stripe_price_classic_monthly: str | None = None
+    stripe_price_classic_annual: str | None = None
+    stripe_price_digital_monthly: str | None = None
+    stripe_price_digital_annual: str | None = None
+    stripe_price_supporter_monthly: str | None = None
+    stripe_price_supporter_annual: str | None = None
 
     analytics_enabled: bool = True
     newsletter_webhook_url: str | None = None

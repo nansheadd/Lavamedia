@@ -1,10 +1,12 @@
 'use client';
 
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useTranslationList, useTranslations } from '@/contexts/language-context';
+import { useLanguage, useTranslationList, useTranslations } from '@/contexts/language-context';
+import { getAdminSubscriptionOverview, type AdminSubscriptionsOverview } from '@/lib/billing-service';
 
 type MonitoringStatus = 'pending' | 'approved' | 'rejected' | 'notified';
 
@@ -63,6 +65,63 @@ export function AdminPageContent() {
   const permissionMatrix = useTranslationList<PermissionMatrixEntry[]>('admin.permissions.matrix');
   const subscriptionSegments = useTranslationList<SubscriptionSegment[]>('admin.subscriptions.segments');
   const subscriptionHighlights = useTranslationList<SubscriptionHighlight[]>('admin.subscriptions.highlights');
+  const planLabels = useTranslationList<Record<string, string>>('admin.subscriptions.planLabels');
+  const intervalLabels = useTranslationList<Record<string, string>>('admin.subscriptions.intervalLabels');
+  const statusLabels = useTranslationList<Record<string, string>>('admin.subscriptions.statusLabels');
+  const { language } = useLanguage();
+  const [subscriptionOverview, setSubscriptionOverview] = useState<AdminSubscriptionsOverview | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+
+  const loadSubscriptions = useCallback(async () => {
+    setSubscriptionLoading(true);
+    try {
+      const overview = await getAdminSubscriptionOverview();
+      setSubscriptionOverview(overview);
+      setSubscriptionError(null);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : t('admin.subscriptions.error');
+      setSubscriptionError(message);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    void loadSubscriptions();
+  }, [loadSubscriptions]);
+
+  const formatAmount = useCallback(
+    (amountCents: number | null, currency: string) => {
+      if (amountCents === null || amountCents === undefined) {
+        return '—';
+      }
+      return new Intl.NumberFormat(language === 'nl' ? 'nl-BE' : 'fr-BE', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2
+      }).format(amountCents / 100);
+    },
+    [language]
+  );
+
+  const formatDate = useCallback(
+    (value: string | null) => {
+      if (!value) {
+        return '—';
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return '—';
+      }
+      return new Intl.DateTimeFormat(language === 'nl' ? 'nl-BE' : 'fr-BE', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }).format(date);
+    },
+    [language]
+  );
 
   const statusTone: Record<MonitoringStatus, 'info' | 'success' | 'warning'> = {
     pending: 'warning',
@@ -218,44 +277,119 @@ export function AdminPageContent() {
           <div>
             <p className="text-sm uppercase tracking-wide text-primary-600">{t('admin.subscriptions.title')}</p>
             <h3 className="text-2xl font-semibold text-slate-900">{t('admin.subscriptions.description')}</h3>
+            {subscriptionError ? (
+              <p className="text-sm font-medium text-rose-600">{subscriptionError}</p>
+            ) : null}
           </div>
-          <Button type="button" variant="ghost" className="self-start px-0 text-sm font-semibold">
-            {t('admin.subscriptions.cta')}
+          <Button
+            type="button"
+            variant="ghost"
+            className="self-start px-0 text-sm font-semibold"
+            disabled={subscriptionLoading}
+            onClick={() => void loadSubscriptions()}
+          >
+            {subscriptionLoading ? t('admin.subscriptions.loading') : t('admin.subscriptions.refresh')}
           </Button>
         </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {subscriptionSegments.map((segment) => (
-            <Card key={segment.id} className="flex h-full flex-col">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">{segment.label}</p>
-                <Badge tone="info">{segment.trend}</Badge>
-              </div>
-              <p className="mt-3 text-3xl font-semibold text-slate-900">{segment.total}</p>
-              <p className="mt-1 text-sm text-slate-600">{segment.description}</p>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">{segment.roleFocus}</p>
-              <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                {segment.actions.map((action) => (
-                  <li key={action} className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-primary-500" aria-hidden />
-                    {action}
+        {subscriptionOverview ? (
+          <>
+            <div className="grid gap-4 lg:grid-cols-4">
+              {[
+                { key: 'total', value: subscriptionOverview.stats.total, label: t('admin.subscriptions.metrics.total') },
+                { key: 'active', value: subscriptionOverview.stats.active, label: t('admin.subscriptions.metrics.active') },
+                { key: 'pastDue', value: subscriptionOverview.stats.past_due, label: t('admin.subscriptions.metrics.pastDue') },
+                { key: 'issues', value: subscriptionOverview.stats.issues, label: t('admin.subscriptions.metrics.issues') }
+              ].map((stat) => (
+                <Card key={stat.key} className="bg-white">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">{stat.label}</p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-900">{stat.value}</p>
+                </Card>
+              ))}
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+              <p className="text-sm font-semibold text-slate-900">{t('admin.subscriptions.liveFeedTitle')}</p>
+              {subscriptionOverview.items.length === 0 ? (
+                <p className="mt-4 text-sm text-slate-600">{t('admin.subscriptions.empty')}</p>
+              ) : (
+                <ul className="mt-4 space-y-4">
+                  {subscriptionOverview.items.slice(0, 6).map((item) => {
+                    const statusTone: Record<string, 'info' | 'warning' | 'success'> = {
+                      active: 'success',
+                      trialing: 'info',
+                      canceled: 'info',
+                      past_due: 'warning',
+                      unpaid: 'warning',
+                      incomplete: 'warning'
+                    };
+                    const tone = statusTone[item.status] ?? 'info';
+                    return (
+                      <li key={item.id} className="rounded-2xl bg-white p-4 shadow-sm">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">
+                              {item.user.full_name ?? item.user.email}
+                            </p>
+                            <p className="text-xs text-slate-500">{item.user.email}</p>
+                          </div>
+                          <Badge tone={tone}>{statusLabels[item.status] ?? item.status}</Badge>
+                        </div>
+                        <p className="mt-3 text-sm text-slate-600">
+                          {planLabels[item.plan_slug] ?? item.plan_slug} ·{' '}
+                          {intervalLabels[item.interval] ?? item.interval}
+                        </p>
+                        <p className="text-base font-semibold text-slate-900">
+                          {formatAmount(item.amount_cents, item.currency)}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {t('admin.subscriptions.nextCharge', { date: formatDate(item.current_period_end) })}
+                        </p>
+                        {item.last_payment_error ? (
+                          <p className="mt-2 text-xs font-medium text-rose-600">{item.last_payment_error}</p>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="grid gap-4 lg:grid-cols-3">
+              {subscriptionSegments.map((segment) => (
+                <Card key={segment.id} className="flex h-full flex-col">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">{segment.label}</p>
+                    <Badge tone="info">{segment.trend}</Badge>
+                  </div>
+                  <p className="mt-3 text-3xl font-semibold text-slate-900">{segment.total}</p>
+                  <p className="mt-1 text-sm text-slate-600">{segment.description}</p>
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">{segment.roleFocus}</p>
+                  <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                    {segment.actions.map((action) => (
+                      <li key={action} className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-primary-500" aria-hidden />
+                        {action}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              ))}
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+              <p className="text-sm font-semibold text-slate-900">{t('admin.subscriptions.highlightsTitle')}</p>
+              <ul className="mt-4 grid gap-3 md:grid-cols-2">
+                {subscriptionHighlights.map((highlight) => (
+                  <li key={highlight.id} className="rounded-2xl bg-white p-4 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-900">{highlight.user}</p>
+                    <p className="text-xs text-slate-500">{highlight.role}</p>
+                    <p className="mt-2 text-sm text-slate-700">{highlight.action}</p>
                   </li>
                 ))}
               </ul>
-            </Card>
-          ))}
-        </div>
-        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-          <p className="text-sm font-semibold text-slate-900">{t('admin.subscriptions.highlightsTitle')}</p>
-          <ul className="mt-4 grid gap-3 md:grid-cols-2">
-            {subscriptionHighlights.map((highlight) => (
-              <li key={highlight.id} className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="text-sm font-semibold text-slate-900">{highlight.user}</p>
-                <p className="text-xs text-slate-500">{highlight.role}</p>
-                <p className="mt-2 text-sm text-slate-700">{highlight.action}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+            </div>
+          </>
+        )}
       </section>
     </div>
   );

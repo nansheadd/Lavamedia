@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Table, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
 from app.utils.datetime import utcnow
+
+if TYPE_CHECKING:
+    from app.models.billing import Subscription
 
 role_permissions = Table(
     "role_permissions",
@@ -79,4 +83,7 @@ class User(Base):
 
     roles: Mapped[list[Role]] = relationship(
         secondary=user_roles, back_populates="users", passive_deletes=True
+    )
+    subscriptions: Mapped[list["Subscription"]] = relationship(
+        "Subscription", back_populates="user", cascade="all, delete-orphan"
     )

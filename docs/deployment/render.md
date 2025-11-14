@@ -146,6 +146,14 @@ DEBUG	false (déjà renseigné).
 DATABASE_URL	Définie automatiquement depuis lavamedia-db.
 Le script de démarrage convertit la valeur postgres:// en postgresql+asyncpg://.
 ALEMBIC_DATABASE_URL	Optionnel : laissez vide pour réutiliser DATABASE_URL.
+STRIPE_API_KEY	Clef secrète Stripe (format sk_live_xxx ou sk_test_xxx).
+STRIPE_WEBHOOK_SECRET	Secret du webhook Stripe associé à /api/billing/webhook.
+STRIPE_PRICE_CLASSIC_MONTHLY	ID du prix Stripe (mensuel) pour la formule Classique.
+STRIPE_PRICE_CLASSIC_ANNUAL	ID du prix annuel pour la formule Classique.
+STRIPE_PRICE_DIGITAL_MONTHLY	ID du prix mensuel pour la formule Digitale (optionnel).
+STRIPE_PRICE_DIGITAL_ANNUAL	ID du prix annuel pour la formule Digitale.
+STRIPE_PRICE_SUPPORTER_MONTHLY	ID du prix mensuel Hauts revenus (optionnel).
+STRIPE_PRICE_SUPPORTER_ANNUAL	ID du prix annuel Hauts revenus.
 
 Le script start.sh
  applique alembic upgrade head avant de lancer Uvicorn et échoue explicitement si DATABASE_URL est absent.
