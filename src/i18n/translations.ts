@@ -455,6 +455,8 @@ export const translations: Record<Language, TranslationRecord> = {
         error: 'Impossible de récupérer les abonnements live.',
         liveFeedTitle: 'Derniers abonnements et incidents',
         empty: 'Aucun abonnement enregistré pour l’instant.',
+        unknownUser: 'Utilisateur inconnu',
+        unknownEmail: 'E-mail non disponible',
         nextCharge: 'Prochain prélèvement : {date}',
         metrics: {
           total: 'Comptes suivis',
@@ -1178,6 +1180,8 @@ export const translations: Record<Language, TranslationRecord> = {
         error: 'Livegegevens konden niet worden opgehaald.',
         liveFeedTitle: 'Laatste abonnementen en incidenten',
         empty: 'Nog geen geregistreerde abonnementen.',
+        unknownUser: 'Onbekende gebruiker',
+        unknownEmail: 'Geen e-mail beschikbaar',
         nextCharge: 'Volgende afschrijving: {date}',
         metrics: {
           total: 'Gevolgde accounts',
