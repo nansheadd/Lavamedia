@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Input } from '@/components/forms/input';
 import { Button } from '@/components/ui/button';
@@ -194,50 +195,67 @@ export function PayWhatYouWantGate({
         <p className="mt-2 text-sm text-slate-600">{t('article.paywall.description')}</p>
         {configError ? <p className="mt-2 text-sm text-rose-600">{configError}</p> : null}
         {formError ? <p className="mt-2 text-sm text-rose-600">{formError}</p> : null}
-        {needsDatawall && !intent ? (
-          <form className="mt-4 space-y-4" onSubmit={handleUnlock}>
-            <Input
-              label={t('article.paywall.emailLabel')}
-              type="email"
-              name="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              disabled={configLoading || submitting}
-            />
-            <Button type="submit" disabled={configLoading || submitting || email.trim().length === 0}>
-              {submitting ? t('newsletterForm.loading') : t('article.paywall.submit')}
-            </Button>
-          </form>
-        ) : (
-          <div className="mt-4 space-y-4">
-            <p className="text-sm text-slate-700">{t('article.paywall.unlockedDescription')}</p>
-            <div>
-              <label className="text-sm font-medium text-slate-900" htmlFor={`pwyw-slider-${slug}`}>
-                {t('article.paywall.sliderLabel')} · <span>{formattedAmount(amountCents)}</span>
-              </label>
-              <input
-                id={`pwyw-slider-${slug}`}
-                type="range"
-                min={minAmount}
-                max={maxAmount}
-                step={config?.step_amount_cents ?? 50}
-                value={clampAmount(amountCents ?? config?.default_amount_cents ?? minAmount)}
-                onChange={(event) => setAmountCents(clampAmount(Number(event.target.value)))}
-                className="mt-2 w-full accent-primary-500"
-              />
-              <p className="mt-1 text-xs text-slate-500">{t('article.paywall.sliderHelper')}</p>
+        <div className="mt-6 space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{t('article.paywall.classicTitle')}</p>
+                <p className="mt-1 text-sm text-slate-600">{t('article.paywall.classicDescription')}</p>
+              </div>
+              <Button asChild variant="secondary">
+                <Link href="/abonnement">{t('article.paywall.classicCta')}</Link>
+              </Button>
             </div>
-            <Button type="button" disabled={checkoutLoading} onClick={handleCheckout}>
-              {checkoutLoading
-                ? t('article.paywall.checkoutLoading')
-                : t('article.paywall.contributeCta', { amount: formattedAmount(amountCents) })}
-            </Button>
-            {datawallDisabled ? (
-              <p className="text-xs text-slate-500">{t('article.paywall.bypassLabel')}</p>
-            ) : null}
           </div>
-        )}
+          <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <p className="text-sm font-semibold text-slate-900">{t('article.paywall.payWhatYouWantTitle')}</p>
+            <p className="mt-1 text-sm text-slate-600">{t('article.paywall.payWhatYouWantDescription')}</p>
+            {needsDatawall && !intent ? (
+              <form className="mt-4 space-y-4" onSubmit={handleUnlock}>
+                <Input
+                  label={t('article.paywall.emailLabel')}
+                  type="email"
+                  name="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  disabled={configLoading || submitting}
+                />
+                <Button type="submit" disabled={configLoading || submitting || email.trim().length === 0}>
+                  {submitting ? t('newsletterForm.loading') : t('article.paywall.submit')}
+                </Button>
+              </form>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <p className="text-sm text-slate-700">{t('article.paywall.unlockedDescription')}</p>
+                <div>
+                  <label className="text-sm font-medium text-slate-900" htmlFor={`pwyw-slider-${slug}`}>
+                    {t('article.paywall.sliderLabel')} · <span>{formattedAmount(amountCents)}</span>
+                  </label>
+                  <input
+                    id={`pwyw-slider-${slug}`}
+                    type="range"
+                    min={minAmount}
+                    max={maxAmount}
+                    step={config?.step_amount_cents ?? 50}
+                    value={clampAmount(amountCents ?? config?.default_amount_cents ?? minAmount)}
+                    onChange={(event) => setAmountCents(clampAmount(Number(event.target.value)))}
+                    className="mt-2 w-full accent-primary-500"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">{t('article.paywall.sliderHelper')}</p>
+                </div>
+                <Button type="button" disabled={checkoutLoading} onClick={handleCheckout}>
+                  {checkoutLoading
+                    ? t('article.paywall.checkoutLoading')
+                    : t('article.paywall.contributeCta', { amount: formattedAmount(amountCents) })}
+                </Button>
+                {datawallDisabled ? (
+                  <p className="text-xs text-slate-500">{t('article.paywall.bypassLabel')}</p>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       <div className={needsDatawall && !intent ? 'pointer-events-none select-none opacity-40 blur-sm transition' : 'transition'}>
         {children}

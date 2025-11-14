@@ -660,6 +660,13 @@ export const translations: Record<Language, TranslationRecord> = {
         title: 'L’accès reste gratuit, laissez votre e-mail pour soutenir Lava.',
         description:
           'Une fois votre e-mail validé, choisissez librement votre contribution mensuelle (annulable à tout moment) pour financer la rédaction.',
+        classicTitle: 'Abonnement classique',
+        classicDescription:
+          'Formules fixes avec accès illimité au site, dossiers spéciaux et magazine papier.',
+        classicCta: 'Découvrir les abonnements',
+        payWhatYouWantTitle: 'Soutien Pay What You Want',
+        payWhatYouWantDescription:
+          'Ce soutien vous donne les mêmes accès qu’un abonné classique tout en choisissant le montant.',
         emailLabel: 'Adresse e-mail',
         submit: 'Débloquer et lire',
         sliderLabel: 'Contribution mensuelle',
@@ -1385,6 +1392,13 @@ export const translations: Record<Language, TranslationRecord> = {
         title: 'De toegang blijft gratis dankzij uw steun.',
         description:
           'Laat uw e-mail achter, kies een vrije bijdrage per maand en ondersteun de redactie (op elk moment opzegbaar).',
+        classicTitle: 'Klassiek abonnement',
+        classicDescription:
+          'Vaste formules met onbeperkte toegang tot de site, dossiers en het papieren magazine.',
+        classicCta: 'Ontdek de abonnementen',
+        payWhatYouWantTitle: 'Pay What You Want-steun',
+        payWhatYouWantDescription:
+          'Deze steun geeft u dezelfde toegang als een klassiek abonnement terwijl u zelf het bedrag kiest.',
         emailLabel: 'E-mailadres',
         submit: 'Ontgrendelen en lezen',
         sliderLabel: 'Maandelijkse bijdrage',
