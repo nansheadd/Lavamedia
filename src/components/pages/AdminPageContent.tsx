@@ -323,14 +323,15 @@ export function AdminPageContent() {
                       incomplete: 'warning'
                     };
                     const tone = statusTone[item.status] ?? 'info';
+                    const displayName =
+                      item.user?.full_name ?? item.user?.email ?? t('admin.subscriptions.unknownUser');
+                    const displayEmail = item.user?.email ?? t('admin.subscriptions.unknownEmail');
                     return (
                       <li key={item.id} className="rounded-2xl bg-white p-4 shadow-sm">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
-                            <p className="text-sm font-semibold text-slate-900">
-                              {item.user.full_name ?? item.user.email}
-                            </p>
-                            <p className="text-xs text-slate-500">{item.user.email}</p>
+                            <p className="text-sm font-semibold text-slate-900">{displayName}</p>
+                            <p className="text-xs text-slate-500">{displayEmail}</p>
                           </div>
                           <Badge tone={tone}>{statusLabels[item.status] ?? item.status}</Badge>
                         </div>
