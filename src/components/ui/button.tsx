@@ -4,7 +4,7 @@ import { forwardRef } from 'react';
 import type { ElementType } from 'react';
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
   asChild?: boolean;
 };
 
@@ -20,6 +20,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           variant === 'primary' && 'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500',
           variant === 'secondary' && 'bg-slate-100 text-slate-900 hover:bg-slate-200 focus-visible:ring-slate-500',
           variant === 'ghost' && 'text-primary-600 hover:bg-primary-50 focus-visible:ring-primary-500',
+          variant === 'outline' &&
+            'border border-slate-300 bg-transparent text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-500 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800',
           className
         )}
         {...props}
