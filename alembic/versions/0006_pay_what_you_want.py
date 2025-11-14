@@ -72,32 +72,27 @@ def upgrade() -> None:
         ["email"],
     )
 
-    op.add_column(
-        "subscriptions",
-        sa.Column("lead_email", sa.String(length=255), nullable=True),
-    )
-    op.add_column(
-        "subscriptions",
-        sa.Column("paywall_intent_id", sa.Integer(), nullable=True),
-    )
-    op.alter_column("subscriptions", "user_id", existing_type=sa.Integer(), nullable=True)
-    op.create_index("ix_subscriptions_lead_email", "subscriptions", ["lead_email"])
-    op.create_foreign_key(
-        "fk_subscriptions_paywall_intent_id",
-        "subscriptions",
-        "pay_what_you_want_intents",
-        ["paywall_intent_id"],
-        ["id"],
-        ondelete="SET NULL",
-    )
+    with op.batch_alter_table("subscriptions", recreate="always") as batch_op:
+        batch_op.add_column(sa.Column("lead_email", sa.String(length=255), nullable=True))
+        batch_op.add_column(sa.Column("paywall_intent_id", sa.Integer(), nullable=True))
+        batch_op.alter_column("user_id", existing_type=sa.Integer(), nullable=True)
+        batch_op.create_index("ix_subscriptions_lead_email", ["lead_email"])
+        batch_op.create_foreign_key(
+            "fk_subscriptions_paywall_intent_id",
+            "pay_what_you_want_intents",
+            ["paywall_intent_id"],
+            ["id"],
+            ondelete="SET NULL",
+        )
 
 
 def downgrade() -> None:
-    op.drop_constraint("fk_subscriptions_paywall_intent_id", "subscriptions", type_="foreignkey")
-    op.drop_index("ix_subscriptions_lead_email", table_name="subscriptions")
-    op.alter_column("subscriptions", "user_id", existing_type=sa.Integer(), nullable=False)
-    op.drop_column("subscriptions", "paywall_intent_id")
-    op.drop_column("subscriptions", "lead_email")
+    with op.batch_alter_table("subscriptions", recreate="always") as batch_op:
+        batch_op.drop_constraint("fk_subscriptions_paywall_intent_id", type_="foreignkey")
+        batch_op.drop_index("ix_subscriptions_lead_email")
+        batch_op.alter_column("user_id", existing_type=sa.Integer(), nullable=False)
+        batch_op.drop_column("paywall_intent_id")
+        batch_op.drop_column("lead_email")
 
     op.drop_index("ix_pay_what_you_want_intents_email", table_name="pay_what_you_want_intents")
     op.drop_index("ix_pay_what_you_want_intents_slug", table_name="pay_what_you_want_intents")
