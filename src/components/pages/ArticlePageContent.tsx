@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Container } from '@/components/layout/container';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage, useTranslations } from '@/contexts/language-context';
+import { PayWhatYouWantGate } from '@/components/paywall/PayWhatYouWantGate';
 import type { ArticleSummary } from '@/types/content';
 
 export type ArticlePageContentProps = {
@@ -43,7 +44,9 @@ export function ArticlePageContent({ articleByLanguage }: ArticlePageContentProp
           {t('article.byAuthor', { author: article.author })} —{' '}
           <time dateTime={article.publishedAt}>{t('article.publishedOn', { date: formattedDate })}</time>
         </p>
-        <div dangerouslySetInnerHTML={{ __html: article.body }} />
+        <PayWhatYouWantGate slug={article.slug}>
+          <div dangerouslySetInnerHTML={{ __html: article.body }} />
+        </PayWhatYouWantGate>
       </Container>
     </article>
   );

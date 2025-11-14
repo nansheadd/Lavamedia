@@ -653,10 +653,27 @@ export const translations: Record<Language, TranslationRecord> = {
       breadcrumb: 'Fil d’ariane',
       home: 'Accueil',
       byAuthor: 'Par {author}',
-      publishedOn: '{date}'
+      publishedOn: '{date}',
+      paywall: {
+        title: 'L’accès reste gratuit, laissez votre e-mail pour soutenir Lava.',
+        description:
+          'Une fois votre e-mail validé, choisissez librement votre contribution mensuelle (annulable à tout moment) pour financer la rédaction.',
+        emailLabel: 'Adresse e-mail',
+        submit: 'Débloquer et lire',
+        sliderLabel: 'Contribution mensuelle',
+        sliderHelper: 'Vous pourrez ajuster ce montant avant le paiement sécurisé.',
+        unlockedTitle: 'Merci ! Votre accès est débloqué.',
+        unlockedDescription:
+          'Profitez de l’article et, si vous le souhaitez, finalisez votre soutien Pay What You Want ci-dessous.',
+        contributeCta: 'Soutenir {amount}/mois',
+        checkoutLoading: 'Redirection vers Stripe…',
+        bypassLabel: 'Cet article reste exceptionnellement accessible sans datawall.',
+        error: 'Impossible de sauvegarder votre choix, merci de réessayer.'
+      }
     },
     articleCard: {
-      readMore: 'Lire l’article'
+      readMore: 'Lire l’article',
+      payWhatYouWant: 'Pay What You Want'
     },
     draftsList: {
       updated: 'Modifié le {date}'
@@ -690,7 +707,8 @@ export const translations: Record<Language, TranslationRecord> = {
         excerpt: 'Rencontre avec des reporters spécialisés qui réinventent la narration environnementale.',
         publishedAt: '2024-04-03',
         author: 'Jeanne Journaliste',
-        body: `<h3>Plongée dans les rédactions</h3><p>Nous avons interrogé sept rédactions européennes qui expérimentent de nouveaux formats immersifs pour expliquer les défis océaniques.</p>`
+        body: `<h3>Plongée dans les rédactions</h3><p>Nous avons interrogé sept rédactions européennes qui expérimentent de nouveaux formats immersifs pour expliquer les défis océaniques.</p>`,
+        isPayWhatYouWant: true
       },
       {
         slug: 'intelligence-collective',
@@ -700,7 +718,8 @@ export const translations: Record<Language, TranslationRecord> = {
         excerpt: 'Des initiatives de co-création éditoriale, du fact-checking partagé aux enquêtes collaboratives.',
         publishedAt: '2024-03-22',
         author: 'Alex Admin',
-        body: `<h3>Réinventer la relation lecteur</h3><p>Quand les lecteurs deviennent contributeurs, la dynamique éditoriale change profondément et ouvre de nouveaux horizons éditoriaux.</p>`
+        body: `<h3>Réinventer la relation lecteur</h3><p>Quand les lecteurs deviennent contributeurs, la dynamique éditoriale change profondément et ouvre de nouveaux horizons éditoriaux.</p>`,
+        isPayWhatYouWant: true
       },
       {
         slug: 'ai-dans-la-culture',
@@ -1357,10 +1376,27 @@ export const translations: Record<Language, TranslationRecord> = {
       breadcrumb: 'Kruimelpad',
       home: 'Home',
       byAuthor: 'Door {author}',
-      publishedOn: '{date}'
+      publishedOn: '{date}',
+      paywall: {
+        title: 'De toegang blijft gratis dankzij uw steun.',
+        description:
+          'Laat uw e-mail achter, kies een vrije bijdrage per maand en ondersteun de redactie (op elk moment opzegbaar).',
+        emailLabel: 'E-mailadres',
+        submit: 'Ontgrendelen en lezen',
+        sliderLabel: 'Maandelijkse bijdrage',
+        sliderHelper: 'Pas het bedrag aan vóór u naar Stripe gaat.',
+        unlockedTitle: 'Bedankt! De toegang is vrijgegeven.',
+        unlockedDescription:
+          'Geniet van het artikel en rond indien gewenst uw Pay What You Want-betaling hieronder af.',
+        contributeCta: 'Steunen met {amount}/maand',
+        checkoutLoading: 'Doorverwijzing naar Stripe…',
+        bypassLabel: 'Dit artikel is tijdelijk vrij toegankelijk (geen datawall).',
+        error: 'Actie mislukt, probeer opnieuw.'
+      }
     },
     articleCard: {
-      readMore: 'Lees het artikel'
+      readMore: 'Lees het artikel',
+      payWhatYouWant: 'Pay What You Want'
     },
     draftsList: {
       updated: 'Bijgewerkt op {date}'
@@ -1394,7 +1430,8 @@ export const translations: Record<Language, TranslationRecord> = {
         excerpt: 'Ontmoet reporters die de milieunarratie opnieuw uitvinden.',
         publishedAt: '2024-04-03',
         author: 'Jeanne Journalist',
-        body: `<h3>Duik in de redacties</h3><p>We spraken met zeven Europese redacties die nieuwe immersieve formats testen om de oceaanuitdagingen uit te leggen.</p>`
+        body: `<h3>Duik in de redacties</h3><p>We spraken met zeven Europese redacties die nieuwe immersieve formats testen om de oceaanuitdagingen uit te leggen.</p>`,
+        isPayWhatYouWant: true
       },
       {
         slug: 'intelligence-collective',
@@ -1404,7 +1441,8 @@ export const translations: Record<Language, TranslationRecord> = {
         excerpt: 'Initiatieven voor gedeelde redactie, van factchecking tot gezamenlijke onderzoeken.',
         publishedAt: '2024-03-22',
         author: 'Alex Admin',
-        body: `<h3>De lezerrelatie heruitvinden</h3><p>Wanneer lezers bijdragers worden, verandert de redactionele dynamiek en ontstaan nieuwe horizonten.</p>`
+        body: `<h3>De lezerrelatie heruitvinden</h3><p>Wanneer lezers bijdragers worden, verandert de redactionele dynamiek en ontstaan nieuwe horizonten.</p>`,
+        isPayWhatYouWant: true
       },
       {
         slug: 'ai-dans-la-culture',

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.api.deps.auth import get_current_user, require_roles
@@ -8,6 +10,7 @@ from app.schemas.billing import (
     AdminSubscriptionsResponse,
     CheckoutSessionRequest,
     CheckoutSessionResponse,
+    PaywallCheckoutRequest,
     SubscriptionStatusResponse,
 )
 from app.services.billing import (
@@ -17,6 +20,7 @@ from app.services.billing import (
     BillingService,
     get_billing_service,
 )
+from app.services.paywall import PayWhatYouWantService
 
 router = APIRouter(tags=["billing"])
 
@@ -37,6 +41,36 @@ async def create_checkout_session(
         )
     except BillingConfigurationError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    await billing_service.session.commit()
+    return CheckoutSessionResponse(checkout_url=session.url)  # type: ignore[arg-type]
+
+
+@router.post("/billing/pay-what-you-want/checkout", response_model=CheckoutSessionResponse)
+async def create_paywall_checkout_session(
+    payload: PaywallCheckoutRequest,
+    billing_service: BillingService = Depends(get_billing_service),
+) -> CheckoutSessionResponse:
+    paywall_service = PayWhatYouWantService(billing_service.session)
+    intent = await paywall_service.get_intent(payload.intent_id)
+    if not intent:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Intent introuvable.")
+    config = await paywall_service.get_or_create_config(intent.scope, intent.slug)
+    amount = min(max(payload.amount_cents, config.min_amount_cents), config.max_amount_cents)
+    try:
+        session = await billing_service.create_paywall_checkout_session(
+            intent=intent,
+            amount_cents=amount,
+            interval=payload.interval,
+            success_url=str(payload.success_url),
+            cancel_url=str(payload.cancel_url),
+        )
+    except BillingConfigurationError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    await paywall_service.record_checkout(
+        intent,
+        amount_cents=amount,
+        started_at=datetime.now(timezone.utc),
+    )
     await billing_service.session.commit()
     return CheckoutSessionResponse(checkout_url=session.url)  # type: ignore[arg-type]
 

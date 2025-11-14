@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLanguage, useTranslationList, useTranslations } from '@/contexts/language-context';
 import { getAdminSubscriptionOverview, type AdminSubscriptionsOverview } from '@/lib/billing-service';
+import { PayWhatYouWantDashboard } from '@/components/admin/PayWhatYouWantDashboard';
 
 type MonitoringStatus = 'pending' | 'approved' | 'rejected' | 'notified';
 
@@ -391,6 +392,7 @@ export function AdminPageContent() {
           </>
         )}
       </section>
+      <PayWhatYouWantDashboard />
     </div>
   );
 }

@@ -20,6 +20,7 @@ ROLE_DEFINITIONS: dict[str, str] = {
     "author": "Auteur/autrice",
     "contributor": "Contributeur/contributrice",
     "subscriber": "Abonné/abonnée",
+    "patron": "Soutien Pay What You Want",
     "client": "Client",
     "user": "Compte lecteur Lavamedia",
 }

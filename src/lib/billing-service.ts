@@ -22,7 +22,7 @@ type SubscriptionUser = {
 
 export type AdminSubscriptionItem = {
   id: number;
-  user: SubscriptionUser;
+  user: SubscriptionUser | null;
   plan_slug: string;
   interval: string;
   status: string;
@@ -32,6 +32,8 @@ export type AdminSubscriptionItem = {
   current_period_end: string | null;
   last_payment_error: string | null;
   latest_invoice_id: string | null;
+  lead_email: string | null;
+  paywall_intent_id: number | null;
   created_at: string;
   updated_at: string;
 };
