@@ -329,7 +329,7 @@ export function SubscriptionFlow({ layout = 'compact' }: SubscriptionFlowProps) 
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100">
               {statusCopy.alreadyActive}
               <div className="mt-3">
-                <Button asChild size="sm" variant="secondary">
+                <Button asChild variant="secondary" className="px-3 py-1 text-sm">
                   <a href="/espace">{statusCopy.manage}</a>
                 </Button>
               </div>
