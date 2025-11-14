@@ -52,6 +52,21 @@ export function PayWhatYouWantDashboard() {
     }
   };
 
+  const togglePaywall = async (config: PaywallConfig) => {
+    setUpdatingConfig(config.id);
+    try {
+      await updatePaywallConfig(config.id, {
+        pay_what_you_want_enabled: !config.pay_what_you_want_enabled
+      });
+      await load();
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Action impossible. Vérifiez vos droits.';
+      setError(message);
+    } finally {
+      setUpdatingConfig(null);
+    }
+  };
+
   const stats = data?.stats;
   const supporters = stats?.supporters ?? 0;
   const leads = stats?.leads ?? 0;
@@ -132,22 +147,37 @@ export function PayWhatYouWantDashboard() {
         <div className="mt-4 space-y-3 text-sm text-slate-600">
           {data?.configs?.length ? (
             data.configs.map((config) => (
-              <div key={config.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 p-4">
+              <div
+                key={config.id}
+                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 p-4"
+              >
                 <div>
                   <p className="font-semibold text-slate-900">{config.slug}</p>
                   <p className="text-xs uppercase tracking-wide text-slate-400">{config.scope}</p>
                   <p className="text-xs text-slate-500">
-                    Datawall {config.datawall_enabled ? 'active' : 'désactivée'} · Min {formatCurrency(config.min_amount_cents)} · Max {formatCurrency(config.max_amount_cents)}
+                    Datawall {config.datawall_enabled ? 'active' : 'désactivée'} · Pay What You Want{' '}
+                    {config.pay_what_you_want_enabled ? 'visible' : 'masqué'} · Min {formatCurrency(config.min_amount_cents)} · Max{' '}
+                    {formatCurrency(config.max_amount_cents)}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => void toggleDatawall(config)}
-                  disabled={updatingConfig === config.id || loading}
-                >
-                  {config.datawall_enabled ? 'Désactiver' : 'Activer'}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => void toggleDatawall(config)}
+                    disabled={updatingConfig === config.id || loading}
+                  >
+                    {config.datawall_enabled ? 'Désactiver datawall' : 'Activer datawall'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void togglePaywall(config)}
+                    disabled={updatingConfig === config.id || loading}
+                  >
+                    {config.pay_what_you_want_enabled ? 'Masquer Pay What You Want' : 'Afficher Pay What You Want'}
+                  </Button>
+                </div>
               </div>
             ))
           ) : (

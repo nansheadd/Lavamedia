@@ -27,6 +27,16 @@ export function ArticlePageContent({ articleByLanguage }: ArticlePageContentProp
     year: 'numeric'
   });
 
+  const articleContent = (
+    <div dangerouslySetInnerHTML={{ __html: article.body }} />
+  );
+
+  const contentWithPaywall = article.isPayWhatYouWant ? (
+    <PayWhatYouWantGate slug={article.slug}>{articleContent}</PayWhatYouWantGate>
+  ) : (
+    articleContent
+  );
+
   return (
     <article className="bg-white py-16 dark:bg-slate-950">
       <Container className="prose prose-slate max-w-3xl dark:prose-invert">
@@ -38,15 +48,20 @@ export function ArticlePageContent({ articleByLanguage }: ArticlePageContentProp
             {article.category}
           </Link>
         </nav>
-        <Badge tone="info">{article.category}</Badge>
+        <div className="flex flex-wrap gap-2">
+          <Badge tone="info">{article.category}</Badge>
+          {article.isPayWhatYouWant ? (
+            <Badge tone="info" className="bg-primary-50 text-primary-700">
+              {t('articleCard.payWhatYouWant')}
+            </Badge>
+          ) : null}
+        </div>
         <h1>{article.title}</h1>
         <p className="text-sm text-slate-500">
           {t('article.byAuthor', { author: article.author })} —{' '}
           <time dateTime={article.publishedAt}>{t('article.publishedOn', { date: formattedDate })}</time>
         </p>
-        <PayWhatYouWantGate slug={article.slug}>
-          <div dangerouslySetInnerHTML={{ __html: article.body }} />
-        </PayWhatYouWantGate>
+        {contentWithPaywall}
       </Container>
     </article>
   );
