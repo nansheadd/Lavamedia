@@ -26,6 +26,14 @@ Dupliquez (ou laissez en place) les fichiers d'environnement générés pour le 
 
 Assurez-vous ensuite de démarrer les deux services avec ces fichiers chargés.
 
+### Variables d'environnement Stripe
+
+Le module de facturation attend également les identifiants Stripe suivants :
+
+- `STRIPE_API_KEY` / `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRICE_CLASSIC_MONTHLY`, `STRIPE_PRICE_CLASSIC_ANNUAL`, etc.
+- `STRIPE_PAY_WHAT_YOU_WANT_PRODUCT_ID` pour générer les abonnements "Pay What You Want" dynamiques.
+
 ### Frontend
 
 ```bash

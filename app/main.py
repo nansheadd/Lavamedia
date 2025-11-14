@@ -15,6 +15,7 @@ from app.api.routes import (
     media,
     newsletter,
     notification,
+    paywall,
     search,
     seo,
 )
@@ -47,6 +48,7 @@ app.include_router(billing.router, prefix="/api")
 app.include_router(newsletter.router, prefix="/api")
 app.include_router(seo.router, prefix="/api")
 app.include_router(notification.router, prefix="/api")
+app.include_router(paywall.router, prefix="/api")
 app.include_router(search.router, prefix="/api")
 app.include_router(editorial.router, prefix="/api")
 

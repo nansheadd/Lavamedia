@@ -14,16 +14,24 @@ type ArticleCardProps = {
   category: string;
   excerpt: string;
   publishedAt: string;
+  isPayWhatYouWant?: boolean;
 };
 
-export function ArticleCard({ slug, title, category, excerpt, publishedAt }: ArticleCardProps) {
+export function ArticleCard({ slug, title, category, excerpt, publishedAt, isPayWhatYouWant }: ArticleCardProps) {
   const { language } = useLanguage();
   const t = useTranslations();
   const locale = language === 'nl' ? nlLocale : fr;
 
   return (
     <Card>
-      <Badge>{category}</Badge>
+      <div className="flex flex-wrap gap-2">
+        <Badge>{category}</Badge>
+        {isPayWhatYouWant ? (
+          <Badge tone="info" className="bg-primary-50 text-primary-700">
+            {t('articleCard.payWhatYouWant')}
+          </Badge>
+        ) : null}
+      </div>
       <CardTitle className="mt-4 text-2xl">
         <Link
           href={`/article/${slug}`}

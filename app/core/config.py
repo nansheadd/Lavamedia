@@ -78,6 +78,7 @@ class Settings(BaseSettings):
     stripe_price_digital_annual: str | None = None
     stripe_price_supporter_monthly: str | None = None
     stripe_price_supporter_annual: str | None = None
+    stripe_pay_what_you_want_product_id: str | None = None
 
     analytics_enabled: bool = True
     newsletter_webhook_url: str | None = None

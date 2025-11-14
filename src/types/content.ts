@@ -9,6 +9,7 @@ export type ArticleSummary = {
   body: string;
   heroImage?: string;
   updatedAt?: string;
+  isPayWhatYouWant?: boolean;
 };
 
 export type CategorySummary = {
