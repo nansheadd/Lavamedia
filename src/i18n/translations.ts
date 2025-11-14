@@ -172,7 +172,201 @@ export const translations: Record<Language, TranslationRecord> = {
         { label: 'Abonnés actifs', value: '12 560', insight: 'Taux de conversion newsletter 7,2%' },
         { label: 'Campagnes publicitaires', value: '3 en cours', insight: 'CTR moyen 4,8%' },
         { label: 'Rôles attribués', value: '24 journalistes', insight: '6 administrateurs' }
-      ]
+      ],
+      monitoring: {
+        title: 'Monitoring du studio',
+        description: 'Suivi en direct des actions critiques',
+        liveLabel: 'Live monitoring',
+        validate: 'Valider',
+        invalidate: 'Invalider',
+        status: {
+          pending: 'En attente',
+          approved: 'Validé',
+          rejected: 'Invalidé',
+          notified: 'Notifié'
+        },
+        events: [
+          {
+            id: '1',
+            user: 'Alice Studio',
+            role: 'Éditrice',
+            action: 'a mis à jour la page d’accueil',
+            asset: 'Studio impact climat',
+            timestamp: 'Il y a 4 min',
+            status: 'pending',
+            canValidate: true
+          },
+          {
+            id: '2',
+            user: 'Marc Admin',
+            role: 'Administrateur',
+            action: 'a validé une campagne audio',
+            asset: 'Brief partenaire Looping',
+            timestamp: 'Il y a 26 min',
+            status: 'approved'
+          },
+          {
+            id: '3',
+            user: 'Nora Auteur',
+            role: 'Contributrice',
+            action: 'demande une relecture',
+            asset: 'Dossier « Voix locales »',
+            timestamp: 'Il y a 1 h',
+            status: 'notified'
+          }
+        ]
+      },
+      notifications: {
+        title: 'Notifications',
+        description: 'Alertes critiques, demandes de validation et rappels SLA.',
+        severity: {
+          info: 'Info',
+          warning: 'Prioritaire',
+          success: 'Résolu'
+        },
+        items: [
+          {
+            id: 'alert-1',
+            title: 'Relire la mise à jour du Studio COP',
+            detail: 'Le module vidéo a été modifié par Alice Studio. Vérifiez la conformité avant diffusion.',
+            severity: 'warning',
+            action: 'Ouvrir le journal'
+          },
+          {
+            id: 'alert-2',
+            title: 'Nouvelle notification partenaire',
+            detail: 'Looping a ajouté un brief audio. Confirmez l’accès contributeur.',
+            severity: 'info',
+            action: 'Gérer les accès'
+          },
+          {
+            id: 'alert-3',
+            title: 'Abonnement corporate renouvelé',
+            detail: 'Société Kaba active 120 accès clients premium pour 12 mois.',
+            severity: 'success'
+          }
+        ]
+      },
+      permissions: {
+        title: 'Contrôle des rôles',
+        description: 'Ajustez finement qui peut publier, valider ou simplement consulter.',
+        helper: 'Chaque badge indique le niveau d’autorisation actif.',
+        capability: 'Fonctionnalité',
+        states: {
+          full: 'Accès total',
+          approve: 'Valider',
+          edit: 'Contribution',
+          view: 'Lecture',
+          blocked: 'Bloqué'
+        },
+        roles: [
+          { id: 'admin', label: 'Admin' },
+          { id: 'editor', label: 'Éditeur' },
+          { id: 'author', label: 'Auteur' },
+          { id: 'contributor', label: 'Contributeur' },
+          { id: 'subscriber', label: 'Abonné' },
+          { id: 'client', label: 'Client' }
+        ],
+        matrix: [
+          {
+            capability: 'Studio & monitoring',
+            description: 'Création, publication et audit en temps réel.',
+            rules: {
+              admin: 'full',
+              editor: 'approve',
+              author: 'edit',
+              contributor: 'edit',
+              subscriber: 'view',
+              client: 'view'
+            }
+          },
+          {
+            capability: 'Campagnes publicitaires',
+            description: 'Validation des assets partenaires et budgets.',
+            rules: {
+              admin: 'full',
+              editor: 'approve',
+              author: 'view',
+              contributor: 'blocked',
+              subscriber: 'blocked',
+              client: 'view'
+            }
+          },
+          {
+            capability: 'Gestion des abonnements',
+            description: 'Upgrades, remboursements et affectation des accès.',
+            rules: {
+              admin: 'full',
+              editor: 'approve',
+              author: 'blocked',
+              contributor: 'blocked',
+              subscriber: 'view',
+              client: 'view'
+            }
+          }
+        ]
+      },
+      subscriptions: {
+        title: 'Abonnements',
+        description: 'Visualisez les statuts par segment et intervenez par rôle ou par utilisateur.',
+        cta: 'Voir toutes les fiches abonnés',
+        highlightsTitle: 'Actions récentes par rôle',
+        segments: [
+          {
+            id: 'subscribers',
+            label: 'Abonnés premium',
+            total: '8 420',
+            trend: '+4,2% / 30 j',
+            roleFocus: 'Rôles : abonnés + lecteurs avancés',
+            description: 'Renouvellement automatique pour 82% des comptes.',
+            actions: ['Analyser la rétention', 'Relancer les expirations', 'Geler un accès sensible']
+          },
+          {
+            id: 'contributors',
+            label: 'Contributeurs studio',
+            total: '1 260',
+            trend: '+2,1% / 7 j',
+            roleFocus: 'Rôles : contributeurs + auteurs externes',
+            description: 'Workflow de validation accéléré (moins de 6 h).',
+            actions: ['Assigner un tuteur', 'Limiter l’export', 'Auditer les permissions']
+          },
+          {
+            id: 'clients',
+            label: 'Clients corporate',
+            total: '310 comptes',
+            trend: 'Stable',
+            roleFocus: 'Rôles : clients + partenaires',
+            description: 'Contrats multi-utilisateurs avec reporting dédié.',
+            actions: ['Vérifier les SLA', 'Exporter les factures', 'Ajouter un contributeur invité']
+          }
+        ],
+        highlights: [
+          {
+            id: 'highlight-1',
+            user: 'Nora Client',
+            role: 'Client entreprise',
+            action: 'a converti 12 comptes contributeurs en accès premium.'
+          },
+          {
+            id: 'highlight-2',
+            user: 'Yanis Reporter',
+            role: 'Contributeur studio',
+            action: 'a demandé un audit des droits suite à une notification critique.'
+          },
+          {
+            id: 'highlight-3',
+            user: 'Sara Insight',
+            role: 'Admin',
+            action: 'a suspendu un abonnement en doublon et notifié le support.'
+          },
+          {
+            id: 'highlight-4',
+            user: 'Lina Abonnée',
+            role: 'Abonnée premium',
+            action: 'a mis à jour ses rôles lecteurs/clients pour partager son accès.'
+          }
+        ]
+      }
     },
     journalist: {
       eyebrow: 'Espace journaliste',
@@ -512,7 +706,201 @@ export const translations: Record<Language, TranslationRecord> = {
         { label: 'Actieve abonnees', value: '12 560', insight: 'Conversie nieuwsbrief 7,2%' },
         { label: 'Advertentiecampagnes', value: '3 actief', insight: 'Gemiddelde CTR 4,8%' },
         { label: 'Toegekende rollen', value: '24 journalisten', insight: '6 beheerders' }
-      ]
+      ],
+      monitoring: {
+        title: 'Studiomonitoring',
+        description: 'Volg kritieke acties live',
+        liveLabel: 'Live monitoring',
+        validate: 'Valideren',
+        invalidate: 'Afkeuren',
+        status: {
+          pending: 'In afwachting',
+          approved: 'Goedgekeurd',
+          rejected: 'Afgewezen',
+          notified: 'Gemeld'
+        },
+        events: [
+          {
+            id: '1',
+            user: 'Alice Studio',
+            role: 'Editor',
+            action: 'paste de homepage aan',
+            asset: 'Studio klimaatinvloeden',
+            timestamp: '4 min geleden',
+            status: 'pending',
+            canValidate: true
+          },
+          {
+            id: '2',
+            user: 'Marc Admin',
+            role: 'Beheerder',
+            action: 'keurde een audiocampagne goed',
+            asset: 'Partnerbrief Looping',
+            timestamp: '26 min geleden',
+            status: 'approved'
+          },
+          {
+            id: '3',
+            user: 'Nora Auteur',
+            role: 'Contributor',
+            action: 'vraagt een nalezing aan',
+            asset: 'Dossier “Lokale stemmen”',
+            timestamp: '1 u geleden',
+            status: 'notified'
+          }
+        ]
+      },
+      notifications: {
+        title: 'Notificaties',
+        description: 'Kritieke alerts, validatieverzoeken en SLA-herinneringen.',
+        severity: {
+          info: 'Info',
+          warning: 'Prioriteit',
+          success: 'Opgelost'
+        },
+        items: [
+          {
+            id: 'alert-1',
+            title: 'Controleer de update van Studio COP',
+            detail: 'Het videomodule werd aangepast door Alice Studio. Verifieer de conformiteit voor publicatie.',
+            severity: 'warning',
+            action: 'Open het logboek'
+          },
+          {
+            id: 'alert-2',
+            title: 'Nieuwe partnernotificatie',
+            detail: 'Looping voegde een audiobrief toe. Bevestig de contributor-toegang.',
+            severity: 'info',
+            action: 'Toegangen beheren'
+          },
+          {
+            id: 'alert-3',
+            title: 'Corporate abonnement verlengd',
+            detail: 'Bedrijf Kaba activeert 120 premium klantenaccounts voor 12 maanden.',
+            severity: 'success'
+          }
+        ]
+      },
+      permissions: {
+        title: 'Rolcontrole',
+        description: 'Bepaal wie publiceert, valideert of enkel consulteert.',
+        helper: 'Elke badge geeft het actieve autorisatieniveau weer.',
+        capability: 'Functionaliteit',
+        states: {
+          full: 'Volledige toegang',
+          approve: 'Valideren',
+          edit: 'Bijdrage',
+          view: 'Lezen',
+          blocked: 'Geblokkeerd'
+        },
+        roles: [
+          { id: 'admin', label: 'Admin' },
+          { id: 'editor', label: 'Editor' },
+          { id: 'author', label: 'Auteur' },
+          { id: 'contributor', label: 'Contributor' },
+          { id: 'subscriber', label: 'Abonnee' },
+          { id: 'client', label: 'Klant' }
+        ],
+        matrix: [
+          {
+            capability: 'Studio & monitoring',
+            description: 'Creatie, publicatie en realtime-audit.',
+            rules: {
+              admin: 'full',
+              editor: 'approve',
+              author: 'edit',
+              contributor: 'edit',
+              subscriber: 'view',
+              client: 'view'
+            }
+          },
+          {
+            capability: 'Advertentiecampagnes',
+            description: 'Validatie van partnerassets en budgetten.',
+            rules: {
+              admin: 'full',
+              editor: 'approve',
+              author: 'view',
+              contributor: 'blocked',
+              subscriber: 'blocked',
+              client: 'view'
+            }
+          },
+          {
+            capability: 'Abonnementsbeheer',
+            description: 'Upgrades, refunds en toegangstoewijzingen.',
+            rules: {
+              admin: 'full',
+              editor: 'approve',
+              author: 'blocked',
+              contributor: 'blocked',
+              subscriber: 'view',
+              client: 'view'
+            }
+          }
+        ]
+      },
+      subscriptions: {
+        title: 'Abonnementen',
+        description: 'Bekijk de statussen per segment en stuur acties per rol of gebruiker.',
+        cta: 'Alle abonnementsfiches openen',
+        highlightsTitle: 'Recente acties per rol',
+        segments: [
+          {
+            id: 'subscribers',
+            label: 'Premium abonnees',
+            total: '8 420',
+            trend: '+4,2% / 30 d',
+            roleFocus: 'Rollen: abonnees + gevorderde lezers',
+            description: 'Automatische verlenging voor 82% van de accounts.',
+            actions: ['Retentie analyseren', 'Verlopen accounts heractiveren', 'Gevoelige toegang bevriezen']
+          },
+          {
+            id: 'contributors',
+            label: 'Studio-contributors',
+            total: '1 260',
+            trend: '+2,1% / 7 d',
+            roleFocus: 'Rollen: contributors + externe auteurs',
+            description: 'Versneld validatietraject (minder dan 6 u).',
+            actions: ['Mentor toewijzen', 'Export beperken', 'Rechten auditten']
+          },
+          {
+            id: 'clients',
+            label: 'Corporate klanten',
+            total: '310 accounts',
+            trend: 'Stabiel',
+            roleFocus: 'Rollen: klanten + partners',
+            description: 'Multi-user contracten met dedicated reporting.',
+            actions: ['SLA’s controleren', 'Facturen exporteren', 'Gastcontributor toevoegen']
+          }
+        ],
+        highlights: [
+          {
+            id: 'highlight-1',
+            user: 'Nora Client',
+            role: 'Zakelijke klant',
+            action: 'converteerde 12 contributor-accounts naar premium toegang.'
+          },
+          {
+            id: 'highlight-2',
+            user: 'Yanis Reporter',
+            role: 'Studio-contributor',
+            action: 'vroeg een rechtenaudit aan na een kritieke melding.'
+          },
+          {
+            id: 'highlight-3',
+            user: 'Sara Insight',
+            role: 'Admin',
+            action: 'schorste een dubbele abonnementslijn en verwittigde support.'
+          },
+          {
+            id: 'highlight-4',
+            user: 'Lina Abonnée',
+            role: 'Premium abonnee',
+            action: 'paste haar lezers-/klantrollen aan om toegang te delen.'
+          }
+        ]
+      }
     },
     journalist: {
       eyebrow: 'Journalistenruimte',
