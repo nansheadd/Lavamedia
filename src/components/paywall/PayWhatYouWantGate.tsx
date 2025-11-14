@@ -98,6 +98,8 @@ export function PayWhatYouWantGate({
     }
   }, [config, amountCents]);
 
+  const paywallEnabled = config?.pay_what_you_want_enabled ?? true;
+
   const datawallDisabled = useMemo(() => {
     if (!config) {
       return false;
@@ -112,7 +114,7 @@ export function PayWhatYouWantGate({
     return Number.isFinite(until.getTime()) && until.getTime() > Date.now();
   }, [config]);
 
-  const needsDatawall = Boolean(config?.datawall_enabled && !datawallDisabled);
+  const needsDatawall = paywallEnabled && Boolean(config?.datawall_enabled && !datawallDisabled);
   const hasUnlocked = !needsDatawall || Boolean(intent);
 
   const minAmount = config?.min_amount_cents ?? 200;
@@ -180,6 +182,10 @@ export function PayWhatYouWantGate({
       setCheckoutLoading(false);
     }
   };
+
+  if (config && !paywallEnabled) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="space-y-8">
