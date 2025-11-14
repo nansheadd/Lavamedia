@@ -118,12 +118,16 @@ export function PayWhatYouWantGate({
   const needsDatawall = paywallEnabled && Boolean(config?.datawall_enabled && !datawallDisabled);
   const hasUnlocked = !needsDatawall || Boolean(intent);
 
-  const minAmount = config?.min_amount_cents ?? 200;
+  const minAmount = 0;
   const maxAmount = config?.max_amount_cents ?? 2500;
 
   const clampAmount = (value: number) => {
     return Math.min(Math.max(value, minAmount), maxAmount);
   };
+
+  const sliderValue = clampAmount(amountCents ?? config?.default_amount_cents ?? minAmount);
+  const sliderRange = Math.max(maxAmount - minAmount, 1);
+  const sliderProgress = Math.min(Math.max((sliderValue - minAmount) / sliderRange, 0), 1);
 
   const formattedAmount = (value: number | null) => {
     const formatter = new Intl.NumberFormat(language === 'nl' ? 'nl-BE' : 'fr-BE', {
@@ -238,11 +242,63 @@ export function PayWhatYouWantGate({
                     min={minAmount}
                     max={maxAmount}
                     step={config?.step_amount_cents ?? 50}
-                    value={clampAmount(amountCents ?? config?.default_amount_cents ?? minAmount)}
+                    value={sliderValue}
                     onChange={(event) => setAmountCents(clampAmount(Number(event.target.value)))}
                     className="mt-2 w-full accent-primary-500"
                   />
                   <p className="mt-1 text-xs text-slate-500">{t('article.paywall.sliderHelper')}</p>
+                  <div
+                    aria-hidden="true"
+                    className="mt-4 rounded-2xl border border-slate-200 p-3 transition-all"
+                    style={{
+                      background: `linear-gradient(135deg, ${
+                        sliderProgress > 0.65 ? '#f43f5e' : '#cbd5f5'
+                      }, ${sliderProgress > 0.65 ? '#facc15' : '#e2e8f0'})`,
+                      boxShadow:
+                        sliderProgress > 0.1
+                          ? `0 10px 25px rgba(244,63,94,${0.15 + sliderProgress * 0.45})`
+                          : undefined
+                    }}
+                  >
+                    <div className="flex items-end justify-between gap-2">
+                      {Array.from({ length: 5 }).map((_, index) => {
+                        const isActive = index < Math.max(1, Math.round(sliderProgress * 5));
+                        const scale = 0.85 + index * 0.05 + sliderProgress * 0.25;
+                        const color = isActive
+                          ? `hsl(0, ${40 + sliderProgress * 50}%, ${35 + sliderProgress * 25}%)`
+                          : '#94a3b8';
+                        const opacity = isActive ? 0.45 + sliderProgress * 0.5 : 0.25;
+                        const translate = (4 - index) * 4;
+                        return (
+                          <span
+                            key={`paper-${index}`}
+                            className="text-3xl transition-all duration-500"
+                            style={{
+                              color,
+                              opacity,
+                              transform: `translateY(-${translate}px) scale(${scale})`
+                            }}
+                          >
+                            📰
+                          </span>
+                        );
+                      })}
+                      <span
+                        className="text-4xl transition-all duration-500"
+                        style={{
+                          color: `hsl(0, ${60 + sliderProgress * 40}%, ${30 + sliderProgress * 25}%)`,
+                          opacity: 0.2 + sliderProgress * 0.8,
+                          transform: `rotate(${(-15 + sliderProgress * 30).toFixed(2)}deg) scale(${0.6 + sliderProgress * 0.8})`,
+                          filter:
+                            sliderProgress > 0.75
+                              ? 'drop-shadow(0 0 18px rgba(248,113,113,0.7))'
+                              : undefined
+                        }}
+                      >
+                        ☭
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 <Button type="button" disabled={checkoutLoading} onClick={handleCheckout}>
                   {checkoutLoading
